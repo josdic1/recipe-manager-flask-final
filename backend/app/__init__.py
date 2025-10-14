@@ -13,13 +13,30 @@ def create_app(config_class=Config):
     cors.init_app(app, resources={r"/api/*": {"origins": "http://localhost:5173"}})
     admin.init_app(app)
     
-    # Add admin views
+    # Add admin views with custom configuration
     from flask_admin.contrib.sqla import ModelView
     from app.models import User, Recipe, Category
     
-    admin.add_view(ModelView(User, db.session))
-    admin.add_view(ModelView(Recipe, db.session))
-    admin.add_view(ModelView(Category, db.session))
+    # Custom RecipeView to show relationships
+    class RecipeView(ModelView):
+        column_list = ['id', 'name', 'user', 'categories', 'created_at']
+        column_searchable_list = ['name']
+        column_filters = ['user.name', 'categories.name']
+        form_columns = ['name', 'user', 'categories']  # Shows user dropdown and categories checkboxes
+    
+    # Custom UserView
+    class UserView(ModelView):
+        column_list = ['id', 'name', 'created_at']
+        column_searchable_list = ['name']
+    
+    # Custom CategoryView
+    class CategoryView(ModelView):
+        column_list = ['id', 'name', 'created_at']
+        column_searchable_list = ['name']
+    
+    admin.add_view(UserView(User, db.session))
+    admin.add_view(RecipeView(Recipe, db.session))
+    admin.add_view(CategoryView(Category, db.session))
     
     # Register blueprints
     from app.routes import api
