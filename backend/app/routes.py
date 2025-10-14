@@ -10,3 +10,10 @@ def get_users():
     users = User.query.all()
     return jsonify(users_schema.dump(users)), 200
 
+@api.route('/users/<int:user_id>', methods=['GET'])
+def get_user(user_id):
+    user = User.query.get_or_404(user_id)
+    return jsonify(user_schema.dump(user)), 200
+
+
+

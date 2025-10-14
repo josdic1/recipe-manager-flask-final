@@ -1,7 +1,5 @@
-# Generated Schemas for Recipes
-
-from extensions import ma
-from models import Recipe, User, Category
+from app.extensions import ma
+from app.models import Recipe, User, Category
 
 # Schema definitions
 class RecipeSchema(ma.SQLAlchemyAutoSchema):
