@@ -53,8 +53,7 @@ def seed_database():
         for i, user in enumerate(users):
             var_name = f"user_{i+1}"
             user_vars[user.id] = var_name
-            email = f', email="{user.email}"' if hasattr(user, 'email') and user.email else ''
-            output += f"    {var_name} = User(name=\"{user.name}\"{email})\n"
+            output += f"    {var_name} = User(name=\"{user.name}\")\n"
         
         output += f"    \n    db.session.add_all([{', '.join(user_vars.values())}])\n"
         output += "    db.session.commit()\n\n"
@@ -63,15 +62,21 @@ def seed_database():
         output += "    # Create recipes\n"
         for i, recipe in enumerate(recipes):
             var_name = f"recipe_{i+1}"
-            user_var = user_vars.get(recipe.user_id, 'None')
             output += f"    {var_name} = Recipe(\n"
             output += f"        name=\"{recipe.name}\",\n"
-            output += f"        user_id={user_var}.id\n"
+            
+            # Handle None user_id properly
+            if recipe.user_id and recipe.user_id in user_vars:
+                output += f"        user_id={user_vars[recipe.user_id]}.id\n"
+            else:
+                output += f"        user_id=None\n"
+            
             output += f"    )\n"
             
             if recipe.categories:
                 cat_list = [cat_vars[cat.id] for cat in recipe.categories if cat.id in cat_vars]
-                output += f"    {var_name}.categories = [{', '.join(cat_list)}]\n"
+                if cat_list:
+                    output += f"    {var_name}.categories = [{', '.join(cat_list)}]\n"
             
             output += f"\n"
         

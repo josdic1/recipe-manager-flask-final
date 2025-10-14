@@ -17,25 +17,33 @@ def create_app(config_class=Config):
     from flask_admin.contrib.sqla import ModelView
     from app.models import User, Recipe, Category
     
-    # Custom RecipeView to show relationships
-    class RecipeView(ModelView):
-        column_list = ['id', 'name', 'user', 'categories', 'created_at']
+    # Simple ModelViews without custom forms
+    class SimpleRecipeView(ModelView):
+        column_list = ['id', 'name', 'categories', 'user', 'created_at']
         column_searchable_list = ['name']
-        column_filters = ['user.name', 'categories.name']
-        form_columns = ['name', 'user', 'categories']  # Shows user dropdown and categories checkboxes
+        # Don't customize form - let Flask-Admin auto-generate
+
+        form_columns = ['name', 'user', 'categories'] 
+        
+        def __str__(self):
+            return self.name  
     
-    # Custom UserView
     class UserView(ModelView):
         column_list = ['id', 'name', 'created_at']
         column_searchable_list = ['name']
+
+        def __str__(self):
+            return self.name  
     
-    # Custom CategoryView
     class CategoryView(ModelView):
         column_list = ['id', 'name', 'created_at']
         column_searchable_list = ['name']
+
+        def __str__(self):
+            return self.name  
     
     admin.add_view(UserView(User, db.session))
-    admin.add_view(RecipeView(Recipe, db.session))
+    admin.add_view(SimpleRecipeView(Recipe, db.session))
     admin.add_view(CategoryView(Category, db.session))
     
     # Register blueprints

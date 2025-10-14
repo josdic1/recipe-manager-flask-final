@@ -22,7 +22,10 @@ class Recipe(db.Model):
     categories = db.relationship('Category', secondary='recipe_categories', back_populates='recipes')
 
     def __repr__(self):
-        return f'<Recipe {self.id}: {self.name}>'
+        return f'{self.name}' 
+    
+    def __str__(self):
+        return self.name
 
 
 class User(db.Model):
@@ -37,7 +40,11 @@ class User(db.Model):
     recipes = db.relationship('Recipe', back_populates='user', cascade='all, delete-orphan')
 
     def __repr__(self):
-        return f'<User {self.id}: {self.name}/>'
+        return f'{self.name}' 
+    
+    def __str__(self):
+        return self.name
+
 
 
 class Category(db.Model):
@@ -52,4 +59,8 @@ class Category(db.Model):
     recipes = db.relationship('Recipe', secondary='recipe_categories', back_populates='categories')
 
     def __repr__(self):
-        return f'<Category {self.id}: {self.name}/>'
+        return f'{self.name}' 
+    
+    def __str__(self):
+        return self.name
+

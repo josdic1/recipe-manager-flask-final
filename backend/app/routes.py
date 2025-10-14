@@ -70,15 +70,23 @@ def create_recipe():
 def update_recipe(recipe_id):
     recipe = Recipe.query.get_or_404(recipe_id)
     data = request.get_json()
-    recipe.name = data.get('name', recipe.name)
     
-    # Handle categories if provided
+    # Update name if provided
+    if 'name' in data:
+        recipe.name = data['name']
+    
+    # Update user if provided
+    if 'user_id' in data:
+        recipe.user_id = data['user_id']
+    
+    # Update categories if provided
     if 'category_ids' in data:
         categories = Category.query.filter(Category.id.in_(data['category_ids'])).all()
         recipe.categories = categories
     
     db.session.commit()
     return jsonify(recipe_schema.dump(recipe)), 200
+
 
 @api.route('/recipes/<int:recipe_id>', methods=['DELETE'])
 def delete_recipe(recipe_id):
