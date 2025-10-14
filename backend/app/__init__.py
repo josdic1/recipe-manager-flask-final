@@ -1,10 +1,14 @@
 from flask import Flask
 from config import Config
+from rich.traceback import install
 from app.extensions import db, ma, migrate, cors, admin
 
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+    
+    # Install Rich pretty errors
+    install(show_locals=True, width=120)
     
     # Initialize extensions
     db.init_app(app)
@@ -21,26 +25,15 @@ def create_app(config_class=Config):
     class SimpleRecipeView(ModelView):
         column_list = ['id', 'name', 'categories', 'user', 'created_at']
         column_searchable_list = ['name']
-        # Don't customize form - let Flask-Admin auto-generate
-
-        form_columns = ['name', 'user', 'categories'] 
-        
-        def __str__(self):
-            return self.name  
+        form_columns = ['name', 'user', 'categories']
     
     class UserView(ModelView):
         column_list = ['id', 'name', 'created_at']
         column_searchable_list = ['name']
-
-        def __str__(self):
-            return self.name  
     
     class CategoryView(ModelView):
         column_list = ['id', 'name', 'created_at']
         column_searchable_list = ['name']
-
-        def __str__(self):
-            return self.name  
     
     admin.add_view(UserView(User, db.session))
     admin.add_view(SimpleRecipeView(Recipe, db.session))

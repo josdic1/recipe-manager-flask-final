@@ -2,17 +2,13 @@ from app.extensions import ma
 from app.models import Recipe, User, Category
 
 # Schema definitions
-class RecipeSchema(ma.SQLAlchemyAutoSchema):
-    # Nested relationships
-    categories = ma.Nested('CategorySchema', many=True, exclude=('recipes',))
-
+class CategorySchema(ma.SQLAlchemyAutoSchema):
     class Meta:
-        model = Recipe
+        model = Category
         load_instance = True
         include_fk = True
 
 class UserSchema(ma.SQLAlchemyAutoSchema):
-    # Nested relationships
     recipes = ma.Nested('RecipeSchema', many=True, exclude=('user',))
 
     class Meta:
@@ -20,12 +16,12 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
         load_instance = True
         include_fk = True
 
-class CategorySchema(ma.SQLAlchemyAutoSchema):
-    # Nested relationships
-    recipes = ma.Nested('RecipeSchema', many=True, exclude=('categories',))
+class RecipeSchema(ma.SQLAlchemyAutoSchema):
+    user = ma.Nested(UserSchema, exclude=('recipes',))
+    categories = ma.Nested(CategorySchema, many=True) 
 
     class Meta:
-        model = Category
+        model = Recipe
         load_instance = True
         include_fk = True
 
