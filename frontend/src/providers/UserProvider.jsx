@@ -1,6 +1,6 @@
-import { useState, useEffect, use } from "react"
-import UserContext from "../contexts/UserContext"
+import { useState, useEffect } from "react"
 import { API_URL } from "../utils"
+import UserContext from "../contexts/UserContext"
 import axios from 'axios'
 
 function UserProvider({children}) {
