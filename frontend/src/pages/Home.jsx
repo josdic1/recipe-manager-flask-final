@@ -1,12 +1,42 @@
+import { useContext } from "react"
+import { useNavigate } from "react-router-dom"
+import UserContext from "../contexts/UserContext"
+import RecipeContext from "../contexts/RecipeContext"
+import Login from "./Login"
+import RecipeList from "../components/RecipeList"
 
 
 function Home() {
+    const { loggedInUser } = useContext(UserContext)
+    const { recipes } = useContext(RecipeContext)
 
-return (
-<>
-<h1>Welcome to the Recipe Manager</h1>
-<p>Manage your recipes with ease!</p>
-</>
-)}
+    const navigate = useNavigate()
+    
+    // If not logged in, show login
+    if (!loggedInUser?.id) {
+        return (
+            <>
+                <h1>Please Log in</h1>
+                <Login />
+            </>
+        )
+    }
+
+    // Filter recipes for logged-in user
+    const userRecipes = recipes
+        .filter(recipe => recipe.user_id === loggedInUser.id)
+
+    return (
+        <>
+            { loggedInUser.id ? 
+            <>
+                <h1>Welcome Back, {loggedInUser.name}</h1> 
+                <p>Manage your recipes with ease!</p>
+                <button type='button' onClick={() => navigate('recipe/new')}>Add Recipe</button>
+                <RecipeList recipes={userRecipes} /></> : console.log('please log in')}
+
+        </>
+    )
+}
 
 export default Home
