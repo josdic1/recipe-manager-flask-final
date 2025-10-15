@@ -18,10 +18,11 @@ function RecipeList({ recipes: propRecipes }) {  // Rename prop to avoid confusi
         case 'edit':
             navigate(`/recipe/${id}/edit`)
             break
-        case 'delete':
-            handleDelete(id) 
-            navigate('/')
-            break
+         case 'delete':
+            if (window.confirm('Are you sure you want to delete this recipe?')) {
+                handleDelete(id)
+                navigate('/')
+            }
         default:
             console.log('Unknown action')
     }

@@ -6,63 +6,116 @@ import { useNavigate, useParams } from "react-router-dom"
 function EditRecipeForm() {
     const { loggedInUser } = useContext(UserContext)
     const { recipes, handleEdit } = useContext(RecipeContext)
-    const [ formData, setFormData ] = useState({
-        id: "",
-        name: '',
-        user_id: loggedInUser.id || "HUGE ERROR: NO USER LOGGED IN",
-        categories: []
-    })
-
     const { id } = useParams()
-
     const navigate = useNavigate()
+    
+    const [formData, setFormData] = useState(null)  // 👈 Start with null
+    const [loading, setLoading] = useState(true)    // 👈 Add loading state
 
+    // Redirect if not logged in
     useEffect(() => {
-        {!loggedInUser.id ? navigate('/') : console.log(`valid login for ${loggedInUser.name}`)}
-    },[loggedInUser])
+        if (!loggedInUser?.id) {
+            navigate('/')
+        }
+    }, [loggedInUser, navigate])
 
+    // Load recipe data
     useEffect(() => {
-        const recipeToEdit = recipes.find(r => r.id === Number(id))
-        setFormData({
-        id: recipeToEdit.id,
-        name: recipeToEdit.name,
-        user_id: loggedInUser.id,
-        categories: recipeToEdit.categories
-        })
-    },[id])
+        if (recipes.length > 0) {  // 👈 Only run when recipes are loaded
+            const recipeToEdit = recipes.find(r => r.id === Number(id))
+            
+            if (recipeToEdit) {
+                setFormData({
+                    id: recipeToEdit.id,
+                    name: recipeToEdit.name,
+                    user_id: recipeToEdit.user_id,
+                    categories: recipeToEdit.categories || []
+                })
+                setLoading(false)  // 👈 Done loading
+            } else {
+                console.error('Recipe not found!')
+                setLoading(false)
+            }
+        }
+    }, [id, recipes])
 
     const onChange = (e) => {
         const { name, value } = e.target
-        setFormData({
-            ...formData,
-            [name]: value
+        
+        if (name === 'categories') {
+            setFormData(prev => ({
+                ...prev,
+                categories: value.split(',').map(cat => cat.trim())
+            }))
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [name]: value
+            }))
         }
-    )}
+    }
 
     function onSubmit(e) {
         e.preventDefault()
-            handleEdit(formData)
-            navigate('/')
-            setFormData({
-                id: '',
-                name: '',
-                user_id: "",
-                categories: []
-            })
-        }
+        handleEdit(formData)
+        navigate('/')
+    }
 
-return (
-<>
-<form onSubmit={onSubmit}>
-    <h2>Edit Recipe</h2>
-    <label htmlFor="name">Recipe Name:</label>
-    <input type="text" id="name" name="name" onChange={onChange} placeholder='Recipe name...' value={formData.name} required />
-    <input type="text" id="user_id" name="user_id" onChange={onChange} placeholder='User name...' value={formData.user_id} readOnly/>
-<input type="text" id="categories" name="categories" onChange={onChange} placeholder='Categories...' value={formData.categories}/>
-    <button type="submit">Edit Recipe</button>
-</form>
+    // 👇 Add loading check
+    if (loading) {
+        return <p>Loading recipe...</p>
+    }
 
-</>
-)}
+    // 👇 Check if recipe not found
+    if (!formData) {
+        return (
+            <>
+                <h2>Recipe Not Found</h2>
+                <button onClick={() => navigate('/')}>Go Home</button>
+            </>
+        )
+    }
+
+    return (
+        <>
+            <form onSubmit={onSubmit}>
+                <h2>Edit Recipe</h2>
+                
+                <label htmlFor="name">Recipe Name:</label>
+                <input 
+                    type="text" 
+                    id="name" 
+                    name="name" 
+                    onChange={onChange} 
+                    placeholder='Recipe name...' 
+                    value={formData.name} 
+                    required 
+                />
+                
+                <label htmlFor="user_id">User ID:</label>
+                <input 
+                    type="text" 
+                    id="user_id" 
+                    name="user_id" 
+                    value={formData.user_id} 
+                    readOnly 
+                />
+                
+                <label htmlFor="categories">Categories (comma-separated):</label>
+                <input 
+                    type="text" 
+                    id="categories" 
+                    name="categories" 
+                    onChange={onChange} 
+                    placeholder='Categories...' 
+                    value={formData.categories.join(', ')} 
+                />
+                
+                <button type="submit">Save Changes</button>
+                <button type="button" onClick={() => navigate('/')}>Cancel</button>
+            </form>
+        </>
+    )
+}
 
 export default EditRecipeForm
