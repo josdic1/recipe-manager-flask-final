@@ -1,1 +1,52 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--logos" width="31.88" height="32" preserveAspectRatio="xMidYMid meet" viewBox="0 0 256 257"><defs><linearGradient id="IconifyId1813088fe1fbc01fb466" x1="-.828%" x2="57.636%" y1="7.652%" y2="78.411%"><stop offset="0%" stop-color="#41D1FF"></stop><stop offset="100%" stop-color="#BD34FE"></stop></linearGradient><linearGradient id="IconifyId1813088fe1fbc01fb467" x1="43.376%" x2="50.316%" y1="2.242%" y2="89.03%"><stop offset="0%" stop-color="#FFEA83"></stop><stop offset="8.333%" stop-color="#FFDD35"></stop><stop offset="100%" stop-color="#FFA800"></stop></linearGradient></defs><path fill="url(#IconifyId1813088fe1fbc01fb466)" d="M255.153 37.938L134.897 252.976c-2.483 4.44-8.862 4.466-11.382.048L.875 37.958c-2.746-4.814 1.371-10.646 6.827-9.67l120.385 21.517a6.537 6.537 0 0 0 2.322-.004l117.867-21.483c5.438-.991 9.574 4.796 6.877 9.62Z"></path><path fill="url(#IconifyId1813088fe1fbc01fb467)" d="M185.432.063L96.44 17.501a3.268 3.268 0 0 0-2.634 3.014l-5.474 92.456a3.268 3.268 0 0 0 3.997 3.378l24.777-5.718c2.318-.535 4.413 1.507 3.936 3.838l-7.361 36.047c-.495 2.426 1.782 4.5 4.151 3.78l15.304-4.649c2.372-.72 4.652 1.36 4.15 3.788l-11.698 56.621c-.732 3.542 3.979 5.473 5.943 2.437l1.313-2.028l72.516-144.72c1.215-2.423-.88-5.186-3.54-4.672l-25.505 4.922c-2.396.462-4.435-1.77-3.759-4.114l16.646-57.705c.677-2.35-1.37-4.583-3.769-4.113Z"></path></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 320" width="31.88" height="40" aria-hidden="true" role="img">
+  <!-- Shield background -->
+  <defs>
+    <linearGradient id="gShield" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#FFE755"/>
+      <stop offset="1" stop-color="#FFD400"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Shield shape -->
+  <path d="M128 8
+           C196 8 236 44 236 96
+           V198
+           C236 242 190 292 128 312
+           C66 292 20 242 20 198
+           V96
+           C20 44 60 8 128 8 Z"
+        fill="url(#gShield)" stroke="#b28b00" stroke-width="3"/>
+
+  <!-- Top stripe: green-white-red -->
+  <g transform="translate(36,22)">
+    <rect x="0" y="0" width="164" height="18" rx="4" />
+    <rect x="0" y="0" width="54.666" height="18" rx="4" fill="#008C45"/>
+    <rect x="54.666" y="0" width="54.666" height="18" rx="0" fill="#FFFFFF"/>
+    <rect x="109.332" y="0" width="54.666" height="18" rx="4" fill="#CD2A3E"/>
+  </g>
+
+  <!-- Stylized prancing horse (simplified silhouette) -->
+  <g transform="translate(30,70) scale(0.9)">
+    <path d="M110 20
+             c-6 0 -18 6 -28 18
+             c-10 12 -24 30 -36 36
+             c-6 3 -12 2 -18 6
+             c-6 4 -8 11 -6 18
+             c2 6 10 12 18 10
+             c8 -2 20 -8 34 -14
+             c14 -6 30 -10 42 -6
+             c12 4 18 14 18 22
+             c0 8 -6 16 -16 20
+             c-10 4 -28 6 -40 14
+             c-12 8 -18 22 -10 30
+             c8 8 26 6 40 2
+             c14 -4 36 -14 50 -26
+             c14 -12 30 -32 32 -52
+             c2 -20 -6 -46 -22 -64
+             c-16 -18 -46 -36 -72 -36 Z"
+          fill="#000" transform="translate(-20,0)"/>
+    <!-- front legs suggestion -->
+    <path d="M40 170 c10 -18 30 -34 50 -36" stroke="#000" stroke-width="8" stroke-linecap="round" fill="none"/>
+    <path d="M80 172 c12 -22 34 -40 56 -44" stroke="#000" stroke-width="8" stroke-linecap="round" fill="none"/>
+  </g>
+</svg>
