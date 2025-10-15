@@ -42,7 +42,7 @@ function RecipeCard() {
             <p>ID: {thisRecipe.id}</p>
             <p>Name: {thisRecipe.name}</p>
             <p>User ID: {thisRecipe.user_id}</p>
-            <p>Categories: {thisRecipe.categories?.join(', ') || 'None'}</p>
+            <p>Categories: {thisRecipe.categories.map(c => c.name).join(', ')}</p>
             <button type="button" onClick={() => onClick(thisRecipe.id, 'edit')}>Edit</button>
             <button type="button" onClick={() => onClick(thisRecipe.id, 'delete')}>Delete</button>
         </>

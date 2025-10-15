@@ -1,11 +1,19 @@
-import { useContext } from "react"
+import { useEffect, useContext } from "react"
 import RecipeContext from "../contexts/RecipeContext"
+import CategoryContext from "../contexts/CategoryContext"
 import { useNavigate } from "react-router-dom"
 
 function RecipeList({ recipes: propRecipes }) {  // Rename prop to avoid confusion
     const { recipes: contextRecipes, handleDelete } = useContext(RecipeContext)
-    
+    const { categories } = useContext(CategoryContext)
+
     const navigate = useNavigate()
+
+    useEffect(() => {
+        if(categories.length === 0) {
+            
+        }
+    },[categories])
 
     // Use prop if provided, otherwise use all recipes from context
     const recipeData = propRecipes || contextRecipes || []
@@ -35,6 +43,7 @@ function RecipeList({ recipes: propRecipes }) {  // Rename prop to avoid confusi
                     <tr>
                         <th>ID</th>
                         <th>Recipe</th>
+                        <th>Categories</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -43,6 +52,9 @@ function RecipeList({ recipes: propRecipes }) {  // Rename prop to avoid confusi
                         <tr key={recipe.id}>
                             <td>{recipe.id}</td>
                             <td>{recipe.name}</td>
+                            <td>
+    {recipe.categories?.map(cat => cat.name).join(', ') || 'None'}
+</td>
                             <td>
                                 <button type='button' onClick={() => onClick(recipe.id, 'view')}>View</button>
                                 <button type='button' onClick={() => onClick(recipe.id, 'edit')}>Edit</button>

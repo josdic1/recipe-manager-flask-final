@@ -1,67 +1,87 @@
 import { useState, useEffect, useContext } from "react"
 import UserContext from "../contexts/UserContext"
 import RecipeContext from "../contexts/RecipeContext"
+import CategoryContext from "../contexts/CategoryContext"
 import { useNavigate, useParams } from "react-router-dom"
 
 function EditRecipeForm() {
     const { loggedInUser } = useContext(UserContext)
     const { recipes, handleEdit } = useContext(RecipeContext)
+    const { categories } = useContext(CategoryContext)
+    const [categoryIds, setCategoryIds] = useState([])
     const { id } = useParams()
     const navigate = useNavigate()
     
-    const [formData, setFormData] = useState(null)  // 👈 Start with null
-    const [loading, setLoading] = useState(true)    // 👈 Add loading state
+    const [formData, setFormData] = useState(null)  
+    const [loading, setLoading] = useState(true)    
 
-    // Redirect if not logged in
+
     useEffect(() => {
         if (!loggedInUser?.id) {
             navigate('/')
         }
     }, [loggedInUser, navigate])
 
-    // Load recipe data
-    useEffect(() => {
-        if (recipes.length > 0) {  // 👈 Only run when recipes are loaded
-            const recipeToEdit = recipes.find(r => r.id === Number(id))
-            
-            if (recipeToEdit) {
-                setFormData({
-                    id: recipeToEdit.id,
-                    name: recipeToEdit.name,
-                    user_id: recipeToEdit.user_id,
-                    categories: recipeToEdit.categories || []
-                })
-                setLoading(false)  // 👈 Done loading
-            } else {
-                console.error('Recipe not found!')
-                setLoading(false)
-            }
-        }
-    }, [id, recipes])
 
-    const onChange = (e) => {
-        const { name, value } = e.target
+useEffect(() => {
+    if (recipes.length > 0) { 
+        const recipeToEdit = recipes.find(r => r.id === Number(id))
         
-        if (name === 'categories') {
-            setFormData(prev => ({
-                ...prev,
-                categories: value.split(',').map(cat => cat.trim())
-            }))
+        if (recipeToEdit) {
+            setFormData({
+                id: recipeToEdit.id,
+                name: recipeToEdit.name,
+                user_id: recipeToEdit.user_id,
+                categories: recipeToEdit.categories.map(c => c.name).join(', ')
+            })
+            
+
+            setCategoryIds(recipeToEdit.categories.map(c => c.id))
+            
+            setLoading(false)  
         } else {
-            setFormData(prev => ({
-                ...prev,
-                [name]: value
-            }))
+            console.error('Recipe not found!')
+            setLoading(false)
+        }
+    }
+}, [id, recipes])
+    
+
+    
+
+ const onChange = (e) => {
+        const { name, value } = e.target
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }))
+    }
+
+
+     const onSelect = (e) => {
+        const selectedId = Number(e.target.value)
+        if (!categoryIds.includes(selectedId)) {
+            setCategoryIds(prev => [...prev, selectedId])
         }
     }
 
-    function onSubmit(e) {
-        e.preventDefault()
-        handleEdit(formData)
-        navigate('/')
+        const removeCategory = (idToRemove) => {
+        setCategoryIds(prev => prev.filter(id => id !== idToRemove))
     }
 
-    // 👇 Add loading check
+ function onSubmit(e) {
+    e.preventDefault()
+    const updatedRecipe = {
+        id: formData.id,
+        name: formData.name,
+        user_id: formData.user_id,
+        category_ids: categoryIds  
+    }
+    handleEdit(updatedRecipe)
+    navigate('/')
+}
+
+  
     if (loading) {
         return <p>Loading recipe...</p>
     }
@@ -76,6 +96,7 @@ function EditRecipeForm() {
         )
     }
 
+        const selectedCategories = categories.filter(c => categoryIds.includes(c.id))
     return (
         <>
             <form onSubmit={onSubmit}>
@@ -101,15 +122,46 @@ function EditRecipeForm() {
                     readOnly 
                 />
                 
-                <label htmlFor="categories">Categories (comma-separated):</label>
+                {/* <label htmlFor="categories">Categories (comma-separated):</label>
                 <input 
                     type="text" 
                     id="categories" 
                     name="categories" 
                     onChange={onChange} 
                     placeholder='Categories...' 
-                    value={formData.categories.join(', ')} 
-                />
+                    value={formData.categories}
+                /> */}
+
+                 <label htmlFor="cat-selector">Add Categories:</label>
+                <select name='cat-selector' onChange={onSelect} defaultValue="">
+                    <option value="" disabled>Choose a category</option>
+                    {categories.map(c => (
+                        <option key={c.id} value={c.id}>{c.name}</option>  
+                        
+                    ))}
+                </select>
+
+        
+                <div>
+                    <strong>Selected Categories:</strong>
+                    {selectedCategories.length === 0 ? (
+                        <p>No categories selected</p>
+                    ) : (
+                        <ul>
+                            {selectedCategories.map(cat => (
+                                <li key={cat.id}>
+                                    {cat.name} 
+                                    <button 
+                                        type="button" 
+                                        onClick={() => removeCategory(cat.id)}
+                                    >
+                                        Remove
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
                 
                 <button type="submit">Save Changes</button>
                 <button type="button" onClick={() => navigate('/')}>Cancel</button>

@@ -23,7 +23,7 @@ async function fetchRecipes() {
 async function handleNew(newRecipe) {
   try {
     const response = await axios.post(`${API_URL}/recipes`, newRecipe);
-    setRecipes([...recipes, response.data]);
+    setRecipes(prevRecipes => [...prevRecipes, response.data]); 
    } catch (error) {
     console.error("Error adding new recipe:", error);
   }
@@ -32,7 +32,9 @@ async function handleNew(newRecipe) {
 async function handleEdit(editedRecipe) {
   try {
     const response = await axios.put(`${API_URL}/recipes/${editedRecipe.id}`, editedRecipe);
-    setRecipes(recipes.map(recipe => recipe.id === editedRecipe.id ? response.data : recipe)); 
+    setRecipes(prevRecipes => 
+      prevRecipes.map(recipe => recipe.id === editedRecipe.id ? response.data : recipe)
+    ); 
   } catch (error) {
     console.error("Error editing recipe:", error);
   }
@@ -41,7 +43,7 @@ async function handleEdit(editedRecipe) {
 async function handleDelete(recipeId) {
   try {
     await axios.delete(`${API_URL}/recipes/${recipeId}`);
-    setRecipes(recipes.filter(recipe => recipe.id !== recipeId));
+    setRecipes(prevRecipes => prevRecipes.filter(recipe => recipe.id !== recipeId));  
   } catch (error) {
     console.error("Error deleting recipe:", error);
   }

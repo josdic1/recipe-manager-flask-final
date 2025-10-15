@@ -19,10 +19,19 @@ async function fetchCategories() {
   }
 } 
 
+async function handleNew(newCategory) {
+  try {
+    const response = await axios.post(`${API_URL}/categories`, newCategory);
+    setCategories([...categories, response.data]);
+  } catch (error) {
+    console.error("Error creating category:", error);
+  }
+}
+
 return (
 <>
 <CategoryContext.Provider 
-    value={{ categories  }}>
+    value={{ categories, handleNew  }}>
   {children}
 </CategoryContext.Provider>
 </>

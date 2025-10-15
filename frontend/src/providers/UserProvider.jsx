@@ -49,9 +49,8 @@ function UserProvider({children}) {
         value={{ 
           users, 
           loggedInUser, 
-          loginUser,      // 👈 Expose loginUser instead of setLoggedInUser
-          logoutUser,     // 👈 Add logout function
-          handleDelete 
+          loginUser,
+          logoutUser,     
         }}>
       {children}
     </UserContext.Provider>
