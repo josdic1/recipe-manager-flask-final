@@ -1,8 +1,11 @@
 import { useContext } from "react"
+import { useNavigate } from "react-router-dom"
 import UserContext from "../contexts/UserContext"
 
 function UserList() {
     const { users, handleDelete } = useContext(UserContext)
+
+    const navigate = useNavigate()
 
         const onClick = (e) => {
         const {id, name} = e.target
@@ -16,6 +19,7 @@ function UserList() {
                 case 'delete':
                     const userIdToDelete = parseInt(id)
                     handleDelete(userIdToDelete)
+                    navigate('/')
                     break
                 default:
                     console.log('Unknown action')

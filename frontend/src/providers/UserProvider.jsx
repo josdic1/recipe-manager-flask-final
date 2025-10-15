@@ -9,7 +9,7 @@ function UserProvider({children}) {
   const [loggedInUser, setLoggedInUser] = useState({});
 
   const navigate = useNavigate()
-console.log(loggedInUser)
+
 
 useEffect(() => {
   fetchUsers()
@@ -23,6 +23,9 @@ async function fetchUsers() {
     console.error("Error fetching users:", error);
   }
 } 
+
+
+
 
 async function handleDelete(userId) {
   try {

@@ -1,29 +1,31 @@
 import { useContext } from "react"
 import RecipeContext from "../contexts/RecipeContext"
+import { useNavigate } from "react-router-dom"
 
 function RecipeList({ recipes: propRecipes }) {  // Rename prop to avoid confusion
-    const { recipes: contextRecipes } = useContext(RecipeContext)
+    const { recipes: contextRecipes, handleDelete } = useContext(RecipeContext)
     
+    const navigate = useNavigate()
+
     // Use prop if provided, otherwise use all recipes from context
     const recipeData = propRecipes || contextRecipes || []
 
-    const onClick = (e) => {
-        const {id, name} = e.target
-        switch(name) {
-            case 'view':
-                console.log(`View recipe ${id}`)
-                break
-            case 'edit':
-                console.log(`Edit recipe ${id}`)
-                break
-            case 'delete':
-                console.log(`Delete recipe ${id}`)
-                break
-            default:
-                console.log('Unknown action')
-        }
+    const onClick = (id, action) => {
+    switch(action) {
+        case 'view':
+             navigate(`/recipe/${id}`)
+            break
+        case 'edit':
+            navigate(`/recipe/${id}/edit`)
+            break
+        case 'delete':
+            handleDelete(id) 
+            navigate('/')
+            break
+        default:
+            console.log('Unknown action')
     }
-
+}
     return (
         <>
             <h2>Recipe List</h2>
@@ -41,9 +43,9 @@ function RecipeList({ recipes: propRecipes }) {  // Rename prop to avoid confusi
                             <td>{recipe.id}</td>
                             <td>{recipe.name}</td>
                             <td>
-                                <button type='button' name='view' id={recipe.id} onClick={onClick}>View</button>
-                                <button type='button' name='edit' id={recipe.id} onClick={onClick}>Edit</button>
-                                <button type='button' name='delete' id={recipe.id} onClick={onClick}>Delete</button>
+                                <button type='button' onClick={() => onClick(recipe.id, 'view')}>View</button>
+                                <button type='button' onClick={() => onClick(recipe.id, 'edit')}>Edit</button>
+                                <button type='button' onClick={() => onClick(recipe.id, 'delete')}>Delete</button>
                             </td>
                         </tr>
                     ))}

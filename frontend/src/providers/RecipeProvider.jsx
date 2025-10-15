@@ -19,10 +19,38 @@ async function fetchRecipes() {
   }
 } 
 
+
+async function handleNew(newRecipe) {
+  try {
+    const response = await axios.post(`${API_URL}/recipes`, newRecipe);
+    setRecipes([...recipes, response.data]);
+   } catch (error) {
+    console.error("Error adding new recipe:", error);
+  }
+}
+
+async function handleEdit(editedRecipe) {
+  try {
+    const response = await axios.put(`${API_URL}/recipes/${editedRecipe.id}`, editedRecipe);
+    setRecipes(recipes.map(recipe => recipe.id === editedRecipe.id ? response.data : recipe)); 
+  } catch (error) {
+    console.error("Error editing recipe:", error);
+  }
+}
+
+async function handleDelete(recipeId) {
+  try {
+    await axios.delete(`${API_URL}/recipes/${recipeId}`);
+    setRecipes(recipes.filter(recipe => recipe.id !== recipeId));
+  } catch (error) {
+    console.error("Error deleting recipe:", error);
+  }
+}
+
 return (
 <>
 <RecipeContext.Provider 
-    value={{ recipes  }}>
+    value={{ recipes, handleNew, handleEdit, handleDelete  }}>
   {children}
 </RecipeContext.Provider>
 </>

@@ -3,6 +3,7 @@ import NavBar from "./components/NavBar"
 import RecipeProvider from "./providers/RecipeProvider"
 import CategoryProvider from "./providers/CategoryProvider"
 import UserProvider from "./providers/UserProvider"
+import ErrorBoundary from './components/ErrorBoundary'
 
 function App() {
 
@@ -16,7 +17,9 @@ function App() {
       <NavBar />
     </header>
      <main>
+      <ErrorBoundary>
       <Outlet />
+      </ErrorBoundary>
      </main>
         </CategoryProvider>
       </RecipeProvider>

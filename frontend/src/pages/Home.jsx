@@ -8,7 +8,7 @@ import RecipeList from "../components/RecipeList"
 
 function Home() {
     const { loggedInUser } = useContext(UserContext)
-    const { recipes } = useContext(RecipeContext)
+    const { recipes, handleDelete } = useContext(RecipeContext)
 
     const navigate = useNavigate()
     
@@ -33,7 +33,7 @@ function Home() {
                 <h1>Welcome Back, {loggedInUser.name}</h1> 
                 <p>Manage your recipes with ease!</p>
                 <button type='button' onClick={() => navigate('recipe/new')}>Add Recipe</button>
-                <RecipeList recipes={userRecipes} /></> : console.log('please log in')}
+                <RecipeList recipes={userRecipes} handleDelete={handleDelete}/></> : console.log('please log in')}
 
         </>
     )

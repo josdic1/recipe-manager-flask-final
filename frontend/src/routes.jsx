@@ -6,6 +6,8 @@ import UserList from './components/UserList.jsx'
 import CategoryList from './components/CategoryList.jsx'
 import RecipeList from './components/RecipeList.jsx'
 import NewRecipeForm from './pages/NewRecipeForm.jsx'
+import EditRecipeForm from './pages/EditRecipeForm.jsx'
+import RecipeCard from './pages/RecipeCard.jsx'
 
 const routes = [
   { path: '/', element: <App />, errorElement: <Error/>, 
@@ -16,6 +18,8 @@ const routes = [
             { path: 'categories', element: <CategoryList /> },
             { path: 'recipes', element: <RecipeList /> },
             { path: 'recipe/new', element: <NewRecipeForm /> },
+            { path: 'recipe/:id/edit', element: <EditRecipeForm /> },
+            { path: 'recipe/:id', element: <RecipeCard /> }
 
   ] },
 ]
