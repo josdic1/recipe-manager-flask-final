@@ -44,6 +44,7 @@ function RecipeList({ recipes: propRecipes }) {  // Rename prop to avoid confusi
                         <th>ID</th>
                         <th>Recipe</th>
                         <th>Categories</th>
+                        <th>Owner</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -55,6 +56,7 @@ function RecipeList({ recipes: propRecipes }) {  // Rename prop to avoid confusi
                             <td>
     {recipe.categories?.map(cat => cat.name).join(', ') || 'None'}
 </td>
+<td>{recipe.user_id}</td>
                             <td>
                                 <button type='button' onClick={() => onClick(recipe.id, 'view')}>View</button>
                                 <button type='button' onClick={() => onClick(recipe.id, 'edit')}>Edit</button>

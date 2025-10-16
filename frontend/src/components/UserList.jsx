@@ -42,11 +42,11 @@ return (
                 <tr key={user.id}>
                     <td>{user.id}</td>
                     <td>{user.name}</td>
-                    <td>
+                    {/* <td>
                         <button type='button' name='view' id={user.id} onClick={onClick}>View</button>
                         <button type='button' name='edit' id={user.id} onClick={onClick}>Edit</button>
                         <button type='button' name='delete' id={user.id} onClick={onClick}>Delete</button>
-                    </td>
+                    </td> */}
                 </tr>
             ))}
         </tbody>

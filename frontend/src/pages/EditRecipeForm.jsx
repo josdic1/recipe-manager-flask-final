@@ -8,13 +8,12 @@ function EditRecipeForm() {
     const { loggedInUser } = useContext(UserContext)
     const { recipes, handleEdit } = useContext(RecipeContext)
     const { categories } = useContext(CategoryContext)
-    const [categoryIds, setCategoryIds] = useState([])
+    const [categoriesData, setCategoriesData] = useState([])  // {category_id, rating}
     const { id } = useParams()
     const navigate = useNavigate()
     
     const [formData, setFormData] = useState(null)  
     const [loading, setLoading] = useState(true)    
-
 
     useEffect(() => {
         if (!loggedInUser?.id) {
@@ -22,34 +21,33 @@ function EditRecipeForm() {
         }
     }, [loggedInUser, navigate])
 
-
-useEffect(() => {
-    if (recipes.length > 0) { 
-        const recipeToEdit = recipes.find(r => r.id === Number(id))
-        
-        if (recipeToEdit) {
-            setFormData({
-                id: recipeToEdit.id,
-                name: recipeToEdit.name,
-                user_id: recipeToEdit.user_id,
-                categories: recipeToEdit.categories.map(c => c.name).join(', ')
-            })
+    useEffect(() => {
+        if (recipes.length > 0) { 
+            const recipeToEdit = recipes.find(r => r.id === Number(id))
             
-
-            setCategoryIds(recipeToEdit.categories.map(c => c.id))
-            
-            setLoading(false)  
-        } else {
-            console.error('Recipe not found!')
-            setLoading(false)
+            if (recipeToEdit) {
+                setFormData({
+                    id: recipeToEdit.id,
+                    name: recipeToEdit.name
+                })
+                
+                // Load existing categories with ratings
+                if (recipeToEdit.recipe_categories) {
+                    setCategoriesData(recipeToEdit.recipe_categories.map(rc => ({
+                        category_id: rc.category.id,
+                        rating: rc.rating || 3
+                    })))
+                }
+                
+                setLoading(false)  
+            } else {
+                console.error('Recipe not found!')
+                setLoading(false)
+            }
         }
-    }
-}, [id, recipes])
-    
+    }, [id, recipes])
 
-    
-
- const onChange = (e) => {
+    const onChange = (e) => {
         const { name, value } = e.target
         setFormData(prev => ({
             ...prev,
@@ -57,36 +55,41 @@ useEffect(() => {
         }))
     }
 
-
-     const onSelect = (e) => {
+    const onSelect = (e) => {
         const selectedId = Number(e.target.value)
-        if (!categoryIds.includes(selectedId)) {
-            setCategoryIds(prev => [...prev, selectedId])
+        if (!categoriesData.find(c => c.category_id === selectedId)) {
+            setCategoriesData(prev => [...prev, { 
+                category_id: selectedId, 
+                rating: 3 
+            }])
         }
     }
 
-        const removeCategory = (idToRemove) => {
-        setCategoryIds(prev => prev.filter(id => id !== idToRemove))
+    const updateRating = (categoryId, rating) => {
+        setCategoriesData(prev => 
+            prev.map(c => c.category_id === categoryId ? { ...c, rating: Number(rating) } : c)
+        )
     }
 
- function onSubmit(e) {
-    e.preventDefault()
-    const updatedRecipe = {
-        id: formData.id,
-        name: formData.name,
-        user_id: formData.user_id,
-        category_ids: categoryIds  
+    const removeCategory = (idToRemove) => {
+        setCategoriesData(prev => prev.filter(c => c.category_id !== idToRemove))
     }
-    handleEdit(updatedRecipe)
-    navigate('/')
-}
 
-  
+    function onSubmit(e) {
+        e.preventDefault()
+        const updatedRecipe = {
+            id: formData.id,
+            name: formData.name,
+            categories_data: categoriesData
+        }
+        handleEdit(updatedRecipe)
+        navigate('/')
+    }
+
     if (loading) {
         return <p>Loading recipe...</p>
     }
 
-    // 👇 Check if recipe not found
     if (!formData) {
         return (
             <>
@@ -96,7 +99,11 @@ useEffect(() => {
         )
     }
 
-        const selectedCategories = categories.filter(c => categoryIds.includes(c.id))
+    const selectedCategories = categoriesData.map(cd => ({
+        ...categories.find(c => c.id === cd.category_id),
+        rating: cd.rating
+    }))
+
     return (
         <>
             <form onSubmit={onSubmit}>
@@ -112,36 +119,15 @@ useEffect(() => {
                     value={formData.name} 
                     required 
                 />
-                
-                <label htmlFor="user_id">User ID:</label>
-                <input 
-                    type="text" 
-                    id="user_id" 
-                    name="user_id" 
-                    value={formData.user_id} 
-                    readOnly 
-                />
-                
-                {/* <label htmlFor="categories">Categories (comma-separated):</label>
-                <input 
-                    type="text" 
-                    id="categories" 
-                    name="categories" 
-                    onChange={onChange} 
-                    placeholder='Categories...' 
-                    value={formData.categories}
-                /> */}
 
-                 <label htmlFor="cat-selector">Add Categories:</label>
+                <label htmlFor="cat-selector">Add Categories:</label>
                 <select name='cat-selector' onChange={onSelect} defaultValue="">
                     <option value="" disabled>Choose a category</option>
                     {categories.map(c => (
-                        <option key={c.id} value={c.id}>{c.name}</option>  
-                        
+                        <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
                 </select>
 
-        
                 <div>
                     <strong>Selected Categories:</strong>
                     {selectedCategories.length === 0 ? (
@@ -150,7 +136,17 @@ useEffect(() => {
                         <ul>
                             {selectedCategories.map(cat => (
                                 <li key={cat.id}>
-                                    {cat.name} 
+                                    {cat.name}
+                                    
+                                    <label> Rating (1-5): </label>
+                                    <input 
+                                        type="number"
+                                        min="1"
+                                        max="5"
+                                        value={cat.rating}
+                                        onChange={(e) => updateRating(cat.id, e.target.value)}
+                                    />
+                                    
                                     <button 
                                         type="button" 
                                         onClick={() => removeCategory(cat.id)}

@@ -54,13 +54,17 @@ def get_recipe(recipe_id):
 
 @api.route('/recipes', methods=['POST'])
 def create_recipe():
+    from app.models import RecipeCategory
     data = request.get_json()
     new_recipe = Recipe(name=data['name'], user_id=data['user_id'])
     
-    # Handle categories if provided
-    if 'category_ids' in data:
-        categories = Category.query.filter(Category.id.in_(data['category_ids'])).all()
-        new_recipe.categories = categories
+    if 'categories_data' in data:
+        for cat_data in data['categories_data']:
+            rc = RecipeCategory(
+                category_id=cat_data['category_id'],
+                rating=cat_data.get('rating', 3)  # 👈 Get rating from user
+            )
+            new_recipe.recipe_categories.append(rc)
     
     db.session.add(new_recipe)
     db.session.commit()
@@ -68,21 +72,21 @@ def create_recipe():
 
 @api.route('/recipes/<int:recipe_id>', methods=['PUT', 'PATCH'])
 def update_recipe(recipe_id):
+    from app.models import RecipeCategory
     recipe = Recipe.query.get_or_404(recipe_id)
     data = request.get_json()
     
-    # Update name if provided
     if 'name' in data:
         recipe.name = data['name']
     
-    # Update user if provided
-    if 'user_id' in data:
-        recipe.user_id = data['user_id']
-    
-    # Update categories if provided
-    if 'category_ids' in data:
-        categories = Category.query.filter(Category.id.in_(data['category_ids'])).all()
-        recipe.categories = categories
+    if 'categories_data' in data:
+        recipe.recipe_categories = []
+        for cat_data in data['categories_data']:
+            rc = RecipeCategory(
+                category_id=cat_data['category_id'],
+                rating=cat_data.get('rating', 3)
+            )
+            recipe.recipe_categories.append(rc)
     
     db.session.commit()
     return jsonify(recipe_schema.dump(recipe)), 200

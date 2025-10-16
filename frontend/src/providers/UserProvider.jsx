@@ -6,9 +6,17 @@ import axios from 'axios'
 function UserProvider({children}) {
   const [users, setUsers] = useState([]);
   const [loggedInUser, setLoggedInUser] = useState(() => {
-      const saved = localStorage.getItem('loggedInUser')
-      return saved ? JSON.parse(saved) : {}
-  })
+    const saved = localStorage.getItem('loggedInUser')
+    // Check for both null and the string "undefined"
+    if (!saved || saved === 'undefined') return {}
+    
+    try {
+        return JSON.parse(saved)
+    } catch (error) {
+        console.error('Failed to parse loggedInUser:', error)
+        return {}
+    }
+})
 
   // Function to login user AND save to localStorage
   const loginUser = (user) => {

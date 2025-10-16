@@ -1,7 +1,6 @@
 from app.extensions import ma
-from app.models import Recipe, User, Category
+from app.models import Recipe, User, Category, RecipeCategory
 
-# Schema definitions
 class CategorySchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Category
@@ -10,22 +9,32 @@ class CategorySchema(ma.SQLAlchemyAutoSchema):
 
 class UserSchema(ma.SQLAlchemyAutoSchema):
     recipes = ma.Nested('RecipeSchema', many=True, exclude=('user',))
-
+    
     class Meta:
         model = User
         load_instance = True
         include_fk = True
 
+class RecipeCategorySchema(ma.SQLAlchemyAutoSchema):
+    category = ma.Nested(CategorySchema)
+    
+    class Meta:
+        model = RecipeCategory
+        load_instance = True
+        include_fk = True
+
+# ❌ DELETE THE OLD RecipeSchema - You defined it TWICE!
+# Only keep this one:
 class RecipeSchema(ma.SQLAlchemyAutoSchema):
     user = ma.Nested(UserSchema, exclude=('recipes',))
-    categories = ma.Nested(CategorySchema, many=True) 
-
+    recipe_categories = ma.Nested(RecipeCategorySchema, many=True)
+    
     class Meta:
         model = Recipe
         load_instance = True
         include_fk = True
 
-# Create ready-to-use instances of your schemas
+# Create instances
 recipe_schema = RecipeSchema()
 recipes_schema = RecipeSchema(many=True)
 user_schema = UserSchema()

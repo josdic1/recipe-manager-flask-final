@@ -36,11 +36,11 @@ return (
                 <tr key={category.id}>
                     <td>{category.id}</td>
                     <td>{category.name}</td>
-                    <td>
+                    {/* <td>
               <button type='button' name='view' id={category.id} onClick={onClick}>View</button>
                         <button type='button' name='edit' id={category.id} onClick={onClick}>Edit</button>
                         <button type='button' name='delete' id={category.id} onClick={onClick}>Delete</button>
-                    </td>
+                    </td> */}
                 </tr>
             ))}
         </tbody>

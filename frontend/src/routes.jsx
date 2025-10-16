@@ -11,7 +11,7 @@ import RecipeCard from './pages/RecipeCard.jsx'
 import NewCategoryForm from './pages/NewCategoryForm.jsx'
 
 const routes = [
-  { path: '/', element: <App />, errorElement: <Error/>, 
+  { path: '/', element: <App />, 
         children: [
             { index: true, element: <Home /> },
             { path: "login", element: <Login /> },
@@ -21,7 +21,8 @@ const routes = [
             { path: 'recipe/new', element: <NewRecipeForm /> },
             { path: 'category/new', element: <NewCategoryForm /> },
             { path: 'recipe/:id/edit', element: <EditRecipeForm /> },
-            { path: 'recipe/:id', element: <RecipeCard /> }
+            { path: 'recipe/:id', element: <RecipeCard /> },
+             { path: '*', element: <Error /> } 
 
   ] },
 ]

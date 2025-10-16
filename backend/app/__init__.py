@@ -23,9 +23,9 @@ def create_app(config_class=Config):
     
     # Simple ModelViews without custom forms
     class SimpleRecipeView(ModelView):
-        column_list = ['id', 'name', 'categories', 'user', 'created_at']
+        column_list = ['id', 'name', 'recipe_categories', 'user', 'created_at']
         column_searchable_list = ['name']
-        form_columns = ['name', 'user', 'categories']
+        form_columns = ['name', 'user', 'recipe_categories'] 
     
     class UserView(ModelView):
         column_list = ['id', 'name', 'created_at']
