@@ -1,52 +1,35 @@
-import { useContext } from "react"
-import { useNavigate } from "react-router-dom"
-import CategoryContext from "../contexts/CategoryContext"
+import { useContext } from "react";
+import { Link } from "react-router-dom";
+import CategoryContext from "../contexts/CategoryContext";
 
 function CategoryList() {
-    const { categories, handleDelete } = useContext(CategoryContext)
+    const { categories } = useContext(CategoryContext);
 
-    const navigate = useNavigate()
-
-    const onClick = (e) => {
-        const {id, name} = e.target
-            switch(name) {
-                case 'edit':
-                    navigate(`/category/${id}/edit`)
-                    break
-                case 'delete':
-                    const categoryIdToDelete = parseInt(id)
-                    handleDelete(categoryIdToDelete)
-                    navigate('/')
-                default:
-                    console.log('Unknown action')
-            }
+    if (!categories || categories.length === 0) {
+        return <h2>No categories found. Create a recipe to add one!</h2>;
     }
-    
-return (
-<>
-    <h2>Category List</h2>
-    <button type='button' onClick={() => navigate('/category/new')}>Add Category</button>
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Category</th>
-            </tr>
-        </thead>
-        <tbody>
-            {categories.map((category) => (
-                <tr key={category.id}>
-                    <td>{category.id}</td>
-                    <td>{category.name}</td>
-                    <td>
-                        <button type='button' name='edit' id={category.id} onClick={onClick}>Edit</button>
-                        <button type='button' name='delete' id={category.id} onClick={onClick}>Delete</button>
-                    </td>
-                </tr>
-            ))}
-        </tbody>
-    </table>
-</>
-)}
 
-export default CategoryList
+    return (
+        <div>
+            <h1>Categories & Recipes</h1>
+            {categories.map(category => (
+                // Only show categories that actually have recipes
+                category.recipes.length > 0 && (
+                    <div key={category.id} style={{ marginBottom: '2rem', border: '1px solid #ccc', padding: '1rem' }}>
+                        <h2>{category.name}</h2>
+                        <ul>
+                            {category.recipes.map(recipe => (
+                                <li key={recipe.id}>
+                                    <Link to={`/recipe/${recipe.id}`}>{recipe.name}</Link>
+                                    (by {recipe.user.name})
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )
+            ))}
+        </div>
+    );
+}
+
+export default CategoryList;

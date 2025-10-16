@@ -1,168 +1,106 @@
 import { useState, useEffect, useContext } from "react"
-import UserContext from "../contexts/UserContext"
+import { useNavigate, useParams } from "react-router-dom"
 import RecipeContext from "../contexts/RecipeContext"
 import CategoryContext from "../contexts/CategoryContext"
-import { useNavigate, useParams } from "react-router-dom"
+import UserContext from "../contexts/UserContext"
 
 function EditRecipeForm() {
+    const { id } = useParams()
+    const navigate = useNavigate()
     const { loggedInUser } = useContext(UserContext)
     const { recipes, handleEdit } = useContext(RecipeContext)
     const { categories } = useContext(CategoryContext)
-    const [categoriesData, setCategoriesData] = useState([])  // {category_id, rating}
-    const { id } = useParams()
-    const navigate = useNavigate()
     
-    const [formData, setFormData] = useState(null)  
-    const [loading, setLoading] = useState(true)    
+    // Form state
+    const [formData, setFormData] = useState({ name: '' })
+    const [categoryIds, setCategoryIds] = useState([])
+    const [newCategoryNames, setNewCategoryNames] = useState([])
+    const [newCategoryName, setNewCategoryName] = useState("")
+    const [loading, setLoading] = useState(true)
 
+    // Effect to load recipe data once component mounts or recipes/id change
     useEffect(() => {
-        if (!loggedInUser?.id) {
-            navigate('/')
-        }
-    }, [loggedInUser, navigate])
-
-    useEffect(() => {
-        if (recipes.length > 0) { 
-            const recipeToEdit = recipes.find(r => r.id === Number(id))
-            
-            if (recipeToEdit) {
-                setFormData({
-                    id: recipeToEdit.id,
-                    name: recipeToEdit.name
-                })
-                
-                // Load existing categories with ratings
-                if (recipeToEdit.recipe_categories) {
-                    setCategoriesData(recipeToEdit.recipe_categories.map(rc => ({
-                        category_id: rc.category.id,
-                        rating: rc.rating || 3
-                    })))
-                }
-                
-                setLoading(false)  
-            } else {
-                console.error('Recipe not found!')
-                setLoading(false)
+        const recipeToEdit = recipes.find(r => r.id === Number(id))
+        
+        if (recipeToEdit) {
+            // Ensure the logged-in user owns the recipe before allowing edits
+            if (loggedInUser?.id !== recipeToEdit.user_id) {
+                console.error("Unauthorized: You can only edit your own recipes.")
+                navigate('/')
+                return
             }
+            
+            setFormData({ id: recipeToEdit.id, name: recipeToEdit.name })
+            setCategoryIds(recipeToEdit.categories?.map(c => c.id) || [])
+            setLoading(false)
         }
-    }, [id, recipes])
+    }, [id, recipes, loggedInUser, navigate])
 
-    const onChange = (e) => {
-        const { name, value } = e.target
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }))
-    }
-
+    const onChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value })
     const onSelect = (e) => {
         const selectedId = Number(e.target.value)
-        if (!categoriesData.find(c => c.category_id === selectedId)) {
-            setCategoriesData(prev => [...prev, { 
-                category_id: selectedId, 
-                rating: 3 
-            }])
+        if (!categoryIds.includes(selectedId)) setCategoryIds(prev => [...prev, selectedId])
+    }
+    const handleAddNewCategory = () => {
+        if (newCategoryName && !newCategoryNames.includes(newCategoryName)) {
+            setNewCategoryNames(prev => [...prev, newCategoryName])
+            setNewCategoryName("")
         }
     }
-
-    const updateRating = (categoryId, rating) => {
-        setCategoriesData(prev => 
-            prev.map(c => c.category_id === categoryId ? { ...c, rating: Number(rating) } : c)
-        )
-    }
-
-    const removeCategory = (idToRemove) => {
-        setCategoriesData(prev => prev.filter(c => c.category_id !== idToRemove))
-    }
+    const removeSelectedCategory = (idToRemove) => setCategoryIds(prev => prev.filter(catId => catId !== idToRemove))
+    const removeNewCategory = (nameToRemove) => setNewCategoryNames(prev => prev.filter(catName => catName !== nameToRemove))
 
     function onSubmit(e) {
         e.preventDefault()
         const updatedRecipe = {
             id: formData.id,
             name: formData.name,
-            categories_data: categoriesData
+            category_ids: categoryIds,
+            new_category_names: newCategoryNames
         }
         handleEdit(updatedRecipe)
         navigate('/')
     }
 
-    if (loading) {
-        return <p>Loading recipe...</p>
-    }
+    if (loading) return <p>Loading recipe...</p>
 
-    if (!formData) {
-        return (
-            <>
-                <h2>Recipe Not Found</h2>
-                <button onClick={() => navigate('/')}>Go Home</button>
-            </>
-        )
-    }
-
-    const selectedCategories = categoriesData.map(cd => ({
-        ...categories.find(c => c.id === cd.category_id),
-        rating: cd.rating
-    }))
+    const selectedCategories = categories.filter(c => categoryIds.includes(c.id))
 
     return (
-        <>
-            <form onSubmit={onSubmit}>
-                <h2>Edit Recipe</h2>
-                
-                <label htmlFor="name">Recipe Name:</label>
-                <input 
-                    type="text" 
-                    id="name" 
-                    name="name" 
-                    onChange={onChange} 
-                    placeholder='Recipe name...' 
-                    value={formData.name} 
-                    required 
-                />
+        <form onSubmit={onSubmit}>
+            <h2>Edit Recipe</h2>
+            <label htmlFor="name">Recipe Name:</label>
+            <input type="text" id="name" name="name" onChange={onChange} value={formData.name} required />
 
-                <label htmlFor="cat-selector">Add Categories:</label>
-                <select name='cat-selector' onChange={onSelect} defaultValue="">
-                    <option value="" disabled>Choose a category</option>
-                    {categories.map(c => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
+            <label htmlFor="cat-selector">Select Existing Categories:</label>
+            <select onChange={onSelect} defaultValue="">
+                <option value="" disabled>Choose a category</option>
+                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+
+            <label htmlFor="new-cat-input">Or, Add a New Category:</label>
+            <input type="text" id="new-cat-input" value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} />
+            <button type="button" onClick={handleAddNewCategory}>Add Category</button>
+
+            <div>
+                <strong>Categories for this Recipe:</strong>
+                <ul>
+                    {selectedCategories.map(cat => (
+                        <li key={`sel-${cat.id}`}>
+                            {cat.name} <button type="button" onClick={() => removeSelectedCategory(cat.id)}>X</button>
+                        </li>
                     ))}
-                </select>
+                    {newCategoryNames.map(name => (
+                        <li key={`new-${name}`}>
+                            {name} (new) <button type="button" onClick={() => removeNewCategory(name)}>X</button>
+                        </li>
+                    ))}
+                </ul>
+            </div>
 
-                <div>
-                    <strong>Selected Categories:</strong>
-                    {selectedCategories.length === 0 ? (
-                        <p>No categories selected</p>
-                    ) : (
-                        <ul>
-                            {selectedCategories.map(cat => (
-                                <li key={cat.id}>
-                                    {cat.name}
-                                    
-                                    <label> Rating (1-5): </label>
-                                    <input 
-                                        type="number"
-                                        min="1"
-                                        max="5"
-                                        value={cat.rating}
-                                        onChange={(e) => updateRating(cat.id, e.target.value)}
-                                    />
-                                    
-                                    <button 
-                                        type="button" 
-                                        onClick={() => removeCategory(cat.id)}
-                                    >
-                                        Remove
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                </div>
-                
-                <button type="submit">Save Changes</button>
-                <button type="button" onClick={() => navigate('/')}>Cancel</button>
-            </form>
-        </>
+            <button type="submit">Save Changes</button>
+            <button type="button" onClick={() => navigate('/')}>Cancel</button>
+        </form>
     )
 }
 

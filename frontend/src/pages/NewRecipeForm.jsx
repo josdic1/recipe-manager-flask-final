@@ -2,7 +2,6 @@ import { useState, useEffect, useContext } from "react"
 import UserContext from "../contexts/UserContext"
 import RecipeContext from "../contexts/RecipeContext"
 import CategoryContext from "../contexts/CategoryContext"
-
 import { useNavigate } from "react-router-dom"
 
 function NewRecipeForm() {
@@ -11,126 +10,79 @@ function NewRecipeForm() {
     const { categories } = useContext(CategoryContext)
     const navigate = useNavigate()
     
-    // ❌ Change this from categoryIds to categoriesData:
-    const [categoriesData, setCategoriesData] = useState([])  // {category_id, rating}
+    // State for existing category IDs
+    const [categoryIds, setCategoryIds] = useState([])
+    // State for NEW categories by name
+    const [newCategoryNames, setNewCategoryNames] = useState([])
+    const [newCategoryName, setNewCategoryName] = useState("")
+
     const [formData, setFormData] = useState({
         name: '',
-        user_id: loggedInUser.id || ""
+        user_id: loggedInUser?.id || ""
     })
 
     useEffect(() => {
         if (!loggedInUser?.id) navigate('/')
     }, [loggedInUser, navigate])
 
-    const onChange = (e) => {
-        const { name, value } = e.target
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }))
-    }
-
+    const onChange = (e) => setFormData({...formData, [e.target.name]: e.target.value})
     const onSelect = (e) => {
         const selectedId = Number(e.target.value)
-        if (!categoriesData.find(c => c.category_id === selectedId)) {
-            setCategoriesData(prev => [...prev, { 
-                category_id: selectedId, 
-                rating: 3  // Default rating
-            }])
+        if (!categoryIds.includes(selectedId)) setCategoryIds(prev => [...prev, selectedId])
+    }
+    const handleAddNewCategory = () => {
+        if (newCategoryName && !newCategoryNames.includes(newCategoryName)) {
+            setNewCategoryNames(prev => [...prev, newCategoryName])
+            setNewCategoryName("") // Clear input
         }
     }
-
-    // ❌ ADD THIS FUNCTION:
-    const updateRating = (categoryId, rating) => {
-        setCategoriesData(prev => 
-            prev.map(c => c.category_id === categoryId ? { ...c, rating: Number(rating) } : c)
-        )
-    }
-
-    const removeCategory = (idToRemove) => {
-        setCategoriesData(prev => prev.filter(c => c.category_id !== idToRemove))
-    }
+    const removeSelectedCategory = (id) => setCategoryIds(prev => prev.filter(catId => catId !== id))
+    const removeNewCategory = (name) => setNewCategoryNames(prev => prev.filter(catName => catName !== name))
 
     function onSubmit(e) {
         e.preventDefault()
         const newRecipe = {
-            name: formData.name,
-            user_id: loggedInUser.id,
-            categories_data: categoriesData  // ❌ Changed from category_ids!
+            ...formData,
+            category_ids: categoryIds,
+            new_category_names: newCategoryNames
         }
         handleNew(newRecipe)
         navigate('/')
     }
 
-    const selectedCategories = categoriesData.map(cd => ({
-        ...categories.find(c => c.id === cd.category_id),
-        rating: cd.rating
-    }))
+    const selectedCategories = categories.filter(c => categoryIds.includes(c.id))
 
     return (
         <form onSubmit={onSubmit}>
             <h2>New Recipe</h2>
-            
             <label htmlFor="name">Recipe Name:</label>
-            <input 
-                type="text" 
-                id="name" 
-                name="name" 
-                onChange={onChange} 
-                placeholder='Recipe name...' 
-                value={formData.name} 
-                required 
-            />
+            <input type="text" id="name" name="name" onChange={onChange} value={formData.name} required />
             
-            <label htmlFor="user_id">User ID:</label>
-            <input 
-                type="text" 
-                id="user_id" 
-                value={loggedInUser.id} 
-                readOnly 
-            />
-            
-            <label htmlFor="cat-selector">Add Categories:</label>
-            <select name='cat-selector' onChange={onSelect} defaultValue="">
+            {/* Existing Categories Selector */}
+            <label htmlFor="cat-selector">Select Existing Categories:</label>
+            <select onChange={onSelect} defaultValue="">
                 <option value="" disabled>Choose a category</option>
-                {categories.map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
+                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
 
-            <div>
-                <strong>Selected Categories:</strong>
-                {selectedCategories.length === 0 ? (
-                    <p>No categories selected</p>
-                ) : (
-                    <ul>
-                        {selectedCategories.map(cat => (
-                            <li key={cat.id}>
-                                {cat.name}
-                                
-                                <label> Rating (1-5): </label>
-                                <input 
-                                    type="number"
-                                    min="1"
-                                    max="5"
-                                    value={cat.rating}
-                                    onChange={(e) => updateRating(cat.id, e.target.value)}
-                                />
-                                
-                                <button 
-                                    type="button" 
-                                    onClick={() => removeCategory(cat.id)}
-                                >
-                                    Remove
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
-                )}
-            </div>
+            {/* New Category Input */}
+            <label htmlFor="new-cat-input">Or, Add a New Category:</label>
+            <input type="text" id="new-cat-input" value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} />
+            <button type="button" onClick={handleAddNewCategory}>Add Category</button>
 
-                       <button type="submit">Create Recipe</button>
-            <button type="button" onClick={() => navigate('/recipes')}>Cancel</button>
+            {/* Display selected and new categories */}
+            <div>
+                <strong>Categories for this Recipe:</strong>
+                <ul>
+                    {selectedCategories.map(cat => (
+                        <li key={`sel-${cat.id}`}>{cat.name} <button type="button" onClick={() => removeSelectedCategory(cat.id)}>X</button></li>
+                    ))}
+                    {newCategoryNames.map(name => (
+                        <li key={`new-${name}`}>{name} (new) <button type="button" onClick={() => removeNewCategory(name)}>X</button></li>
+                    ))}
+                </ul>
+            </div>
+            <button type="submit">Create Recipe</button>
         </form>
     )
 }

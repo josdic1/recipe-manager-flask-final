@@ -1,51 +1,56 @@
-import { useState, useEffect, useContext } from "react"
-import { useNavigate, useParams } from "react-router-dom"
-import RecipeContext from "../contexts/RecipeContext"
+import { useContext } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import RecipeContext from '../contexts/RecipeContext';
+import UserContext from '../contexts/UserContext';
 
 function RecipeCard() {
-    const { id } = useParams()
-    const { recipes, handleDelete } = useContext(RecipeContext)
-    const [thisRecipe, setThisRecipe] = useState(null)
-    const navigate = useNavigate()
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const { recipes, handleDelete } = useContext(RecipeContext);
+    const { loggedInUser } = useContext(UserContext);
 
-    useEffect(() => {
-        const found = recipes.find(r => r.id === Number(id)) 
-        if (found) {
-            setThisRecipe(found)
-        } 
-    }, [id, recipes])
+    const recipe = recipes.find(r => r.id === Number(id));
 
-    const onClick = (id, action) => {
-        switch(action) {
-            case 'edit':
-                navigate(`/recipe/${id}/edit`)
-                break
-            case 'delete':
-                if (window.confirm('Are you sure you want to delete this recipe?')) {
-                    handleDelete(id)
-                    navigate('/')
-                }
-                break
-            default:
-                console.log('Unknown action')
+    if (!recipe) {
+        return (
+            <div>
+                <h2>Recipe not found.</h2>
+                <Link to="/">Go Home</Link>
+            </div>
+        );
+    }
+
+    const canModify = loggedInUser?.id === recipe.user?.id;
+
+    function onDelete() {
+        if (window.confirm("Are you sure you want to delete this recipe?")) {
+            handleDelete(recipe.id);
+            navigate('/');
         }
     }
 
-    if (!thisRecipe) {
-        return <p>Loading recipe...</p>
-    }
-
     return (
-        <>
-            <h2>Recipe Card for Recipe ID: {id}</h2>
-            <p>ID: {thisRecipe.id}</p>
-            <p>Name: {thisRecipe.name}</p>
-            <p>User ID: {thisRecipe.user_id}</p>
-            <p>Categories: {thisRecipe.recipe_categories?.map(rc => `${rc.category.name} (${rc.rating}⭐)`).join(', ') || 'No categories'}</p>
-            <button type="button" onClick={() => onClick(thisRecipe.id, 'edit')}>Edit</button>
-            <button type="button" onClick={() => onClick(thisRecipe.id, 'delete')}>Delete</button>
-        </>
-    )
+        <div>
+            <h2>Recipe Card for {recipe.name}</h2>
+            <p><strong>ID:</strong> {recipe.id}</p>
+            <p><strong>Name:</strong> {recipe.name}</p>
+            <p><strong>Owner:</strong> {recipe.user ? recipe.user.name : `User ID: ${recipe.user_id}`}</p>
+            <p>
+                <strong>Categories:</strong>
+                {recipe.categories && recipe.categories.length > 0
+                    ? recipe.categories.map(cat => cat.name).join(', ')
+                    : "No categories assigned"
+                }
+            </p>
+
+            {canModify && (
+                <div>
+                    <button onClick={() => navigate(`/recipe/${recipe.id}/edit`)}>Edit</button>
+                    <button onClick={onDelete}>Delete</button>
+                </div>
+            )}
+        </div>
+    );
 }
 
-export default RecipeCard
+export default RecipeCard;

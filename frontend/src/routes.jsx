@@ -13,15 +13,20 @@ import EditCategoryForm from './pages/EditCategoryForm.jsx'
 import NewUserForm from './pages/NewUserForm.jsx'
 import EditUserForm from './pages/EditUserForm.jsx'
 import FullSchemaGenerator from './components/RelationshipGenerator.jsx'
+import CategoryDetail from './components/CategoryDetail.jsx'
 
 const routes = [
   { path: '/', element: <App />, 
         children: [
             { index: true, element: <Home /> },
             { path: "login", element: <Login /> },
+            
+            // Updated Routes
             { path: 'users', element: <UserList /> },
-            { path: 'categories', element: <CategoryList /> },
             { path: 'recipes', element: <RecipeList /> },
+            { path: 'categories', element: <CategoryList /> }, // Main category list
+            { path: 'category/:id', element: <CategoryDetail /> }, // Drill-down detail page
+            {path: 'generate-schema', element: <FullSchemaGenerator />},
             { path: 'recipe/new', element: <NewRecipeForm /> },
             { path: 'category/new', element: <NewCategoryForm /> },
             { path: 'user/new', element: <NewUserForm /> },
@@ -29,9 +34,7 @@ const routes = [
             { path: 'category/:id/edit', element: <EditCategoryForm /> },
             { path: 'user/:id/edit', element: <EditUserForm /> },
             { path: 'recipe/:id', element: <RecipeCard /> },
-            { path: 'generator', element: <FullSchemaGenerator /> },
             { path: '*', element: <Error /> } 
-
   ] },
 ]
 

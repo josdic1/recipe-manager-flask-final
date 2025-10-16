@@ -11,20 +11,20 @@ function App() {
 
   return (
     <>
-    <UserProvider>
-      <RecipeProvider>
-        <CategoryProvider>
-              <header>
-      <NavBar />
-    </header>
-     <main>
-      <ErrorBoundary>
-      <Outlet />
-      </ErrorBoundary>
-     </main>
-        </CategoryProvider>
-      </RecipeProvider>
-    </UserProvider>
+<UserProvider>
+  <CategoryProvider>  
+    <RecipeProvider>  
+      <header>
+        <NavBar />
+      </header>
+      <main>
+        <ErrorBoundary>
+          <Outlet />
+        </ErrorBoundary>
+      </main>
+    </RecipeProvider>
+  </CategoryProvider>
+</UserProvider>
     </>
   )
 }

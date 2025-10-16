@@ -69,7 +69,7 @@ function UserProvider({children}) {
     }
   }
 
-  return (
+return (
     <UserContext.Provider 
       value={{ 
         users, 

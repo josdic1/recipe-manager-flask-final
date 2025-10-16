@@ -54,7 +54,7 @@ function RecipeList({ recipes: propRecipes }) {
                             <td>{recipe.id}</td>
                             <td>{recipe.name}</td>
                             <td>
-                                {recipe.recipe_categories?.map(rc => `${rc.category.name} (${rc.rating}⭐)`).join(', ') || 'None'}
+                                {recipe.categories?.map(cat => cat.name).join(', ') || 'None'}
                             </td>
                             <td>{recipe.user?.name || recipe.user_id}</td>
                             <td>

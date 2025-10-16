@@ -1,59 +1,44 @@
-import { useState, useContext } from "react"
-import { useNavigate } from "react-router-dom"
-import UserContext from "../contexts/UserContext"
+import { useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
+import UserContext from '../contexts/UserContext';
 
 function NewUserForm() {
-    const { users, handleNew } = useContext(UserContext)
-    const [formData, setFormData] = useState({
-        name: ""
-    })
-    
-    const navigate = useNavigate()
+    const [name, setName] = useState('');
+    const { handleNew } = useContext(UserContext);
+    const navigate = useNavigate();
 
-    const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        })
-    }
-
-    function onSubmit(e) {
-        e.preventDefault()
-        const newUser = {
-            name: formData.name.trim()
-        }
+    function handleSubmit(e) {
+        e.preventDefault();
         
-        if (newUser.name && !users.find(user => user.name.toLowerCase() === newUser.name.toLowerCase())) {
-            handleNew(newUser)
-            navigate('/users')
-            setFormData({ name: "" })
+        // Check if the name is not empty or just whitespace
+        if (name.trim()) {
+            handleNew({ name });
+            // Navigate to the user list after creating the user
+            navigate('/users');
         } else {
-            alert("User name cannot be empty or duplicate.")
+            alert("Please enter a name for the user.");
         }
     }
 
     return (
-        <>
-            <form onSubmit={onSubmit}>
-                <h2>New User</h2>
-                
-                <label>
-                    Name:
-                    <input 
-                        type="text" 
-                        name="name" 
-                        value={formData.name} 
-                        onChange={handleChange}
-                        placeholder="Enter user name..."
-                        required
-                    />
-                </label>
-                
-                <button type="submit">Create User</button>
-                <button type="button" onClick={() => navigate('/users')}>Cancel</button>
-            </form>
-        </>
-    )
+        <form onSubmit={handleSubmit}>
+            <h2>Create New User</h2>
+            <div style={{ margin: '1rem 0' }}>
+                <label htmlFor="name" style={{ marginRight: '0.5rem' }}>Name:</label>
+                <input
+                    type="text"
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Enter user's name"
+                    required
+                    autoFocus
+                />
+            </div>
+            <button type="submit">Create User</button>
+            <button type="button" onClick={() => navigate('/users')}>Cancel</button>
+        </form>
+    );
 }
 
-export default NewUserForm
+export default NewUserForm;
