@@ -13,6 +13,7 @@ return (
     <NavLink to="recipes">Recipes</NavLink>
     <NavLink to="users">Users</NavLink>
     <NavLink to="categories">Categories</NavLink>
+    <NavLink to="generator">Relationships</NavLink>
     {loggedInUser?.id && (
     <button onClick={logoutUser}>Logout</button>
 )}

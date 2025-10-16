@@ -34,6 +34,7 @@ function Home() {
                 <p>Manage your recipes with ease!</p>
                 <button type='button' onClick={() => navigate('recipe/new')}>Add Recipe</button>
                  <button type='button' onClick={() => navigate('category/new')}>Add Category</button>
+                   <button type='button' onClick={() => navigate('/user/new')}>Add User</button>
                 <RecipeList recipes={userRecipes} handleDelete={handleDelete}/></> : console.log('please log in')}
 
         </>

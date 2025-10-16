@@ -108,7 +108,6 @@ function NewRecipeForm() {
                             <li key={cat.id}>
                                 {cat.name}
                                 
-                                {/* ❌ ADD THIS RATING INPUT: */}
                                 <label> Rating (1-5): </label>
                                 <input 
                                     type="number"
@@ -130,7 +129,8 @@ function NewRecipeForm() {
                 )}
             </div>
 
-            <button type="submit">Add Recipe</button>
+                       <button type="submit">Create Recipe</button>
+            <button type="button" onClick={() => navigate('/recipes')}>Cancel</button>
         </form>
     )
 }

@@ -10,11 +10,8 @@ function UserList() {
         const onClick = (e) => {
         const {id, name} = e.target
             switch(name) {
-                case 'view':
-                    console.log(`View user ${id}`)
-                    break
                 case 'edit':
-                    console.log(`Edit user ${id}`)
+                    navigate(`/user/${id}/edit`)
                     break
                 case 'delete':
                     const userIdToDelete = parseInt(id)
@@ -30,6 +27,7 @@ function UserList() {
 return (
 <>
     <h2>User List</h2>
+     <button type='button' onClick={() => navigate('/user/new')}>Add User</button>
     <table>
         <thead>
             <tr>
@@ -42,11 +40,10 @@ return (
                 <tr key={user.id}>
                     <td>{user.id}</td>
                     <td>{user.name}</td>
-                    {/* <td>
-                        <button type='button' name='view' id={user.id} onClick={onClick}>View</button>
+                    <td>
                         <button type='button' name='edit' id={user.id} onClick={onClick}>Edit</button>
                         <button type='button' name='delete' id={user.id} onClick={onClick}>Delete</button>
-                    </td> */}
+                    </td>
                 </tr>
             ))}
         </tbody>

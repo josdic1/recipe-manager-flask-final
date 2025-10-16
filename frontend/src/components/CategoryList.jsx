@@ -1,21 +1,22 @@
 import { useContext } from "react"
+import { useNavigate } from "react-router-dom"
 import CategoryContext from "../contexts/CategoryContext"
 
 function CategoryList() {
-    const { categories } = useContext(CategoryContext)
+    const { categories, handleDelete } = useContext(CategoryContext)
+
+    const navigate = useNavigate()
 
     const onClick = (e) => {
         const {id, name} = e.target
             switch(name) {
-                case 'view':
-                    console.log(`View category ${id}`)
-                    break
                 case 'edit':
-                    console.log(`Edit category ${id}`)
+                    navigate(`/category/${id}/edit`)
                     break
                 case 'delete':
-                    console.log(`Delete category ${id}`)
-                    break
+                    const categoryIdToDelete = parseInt(id)
+                    handleDelete(categoryIdToDelete)
+                    navigate('/')
                 default:
                     console.log('Unknown action')
             }
@@ -24,6 +25,7 @@ function CategoryList() {
 return (
 <>
     <h2>Category List</h2>
+    <button type='button' onClick={() => navigate('/category/new')}>Add Category</button>
     <table>
         <thead>
             <tr>
@@ -36,11 +38,10 @@ return (
                 <tr key={category.id}>
                     <td>{category.id}</td>
                     <td>{category.name}</td>
-                    {/* <td>
-              <button type='button' name='view' id={category.id} onClick={onClick}>View</button>
+                    <td>
                         <button type='button' name='edit' id={category.id} onClick={onClick}>Edit</button>
                         <button type='button' name='delete' id={category.id} onClick={onClick}>Delete</button>
-                    </td> */}
+                    </td>
                 </tr>
             ))}
         </tbody>

@@ -52,13 +52,15 @@ class RecipeCategory(db.Model):
     
     recipe_id = db.Column(db.Integer, db.ForeignKey('recipes.id'), primary_key=True)
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), primary_key=True)
-    
     rating = db.Column(db.Integer, default=3)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     
-    # ❌ FIX THESE - Change backref to back_populates:
     recipe = db.relationship('Recipe', back_populates='recipe_categories')
     category = db.relationship('Category', back_populates='recipe_categories')
+    
+    # Add this:
+    def __repr__(self):
+        return f'<{self.category.name}: {self.rating}⭐>'
 
 
 class User(db.Model):

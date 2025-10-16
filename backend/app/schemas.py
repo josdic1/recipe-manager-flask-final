@@ -23,8 +23,6 @@ class RecipeCategorySchema(ma.SQLAlchemyAutoSchema):
         load_instance = True
         include_fk = True
 
-# ❌ DELETE THE OLD RecipeSchema - You defined it TWICE!
-# Only keep this one:
 class RecipeSchema(ma.SQLAlchemyAutoSchema):
     user = ma.Nested(UserSchema, exclude=('recipes',))
     recipe_categories = ma.Nested(RecipeCategorySchema, many=True)

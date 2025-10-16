@@ -1,42 +1,50 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.container {
+  max-width: 960px; margin: 28px auto; padding: 0 16px;
 }
 
 .card {
-  padding: 2em;
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 14px;
+  padding: 16px; box-shadow: 0 2px 8px rgba(17,24,39,.04);
 }
 
-.read-the-docs {
-  color: #888;
+.row { display: flex; gap: 10px; align-items: center; }
+
+.tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border-radius: 999px;
+  background: #f3f4f6; color: #111827; border: 1px solid #e5e7eb;
 }
+.tag-x {
+  background: none; border: 0; color: #6b7280; cursor: pointer; padding: 0 4px;
+}
+.tag-x:hover { color: #111827; }
+
+.footer { border-top: 1px solid #e5e7eb; background: #fff; margin-top: 24px; }
+.footer__inner { max-width: 960px; margin: 0 auto; padding: 14px 16px; color: #6b7280; }
+
+button, .btn {
+  border: 1px solid #e5e7eb; background: #fff; color: #111827;
+  padding: 10px 12px; border-radius: 10px; cursor: pointer;
+}
+button:hover, .btn:hover { background: #f9fafb; }
+button:disabled { opacity: .55; cursor: not-allowed; }
+
+.btn--primary {
+  border-color: #2563eb; background: #2563eb; color: #fff;
+}
+.btn--danger {
+  border-color: #ef4444; background: #ef4444; color: #fff;
+}
+
+input, select, textarea {
+  width: 100%; max-width: 480px;
+  background: #fff; color: #111827; border: 1px solid #e5e7eb;
+  border-radius: 10px; padding: 10px 12px; outline: none;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+}
+
+.muted { color: #6b7280; }
+

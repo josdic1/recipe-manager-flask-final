@@ -5,10 +5,14 @@ import Login from './pages/Login.jsx'
 import UserList from './components/UserList.jsx'
 import CategoryList from './components/CategoryList.jsx'
 import RecipeList from './components/RecipeList.jsx'
+import RecipeCard from './pages/RecipeCard.jsx'
 import NewRecipeForm from './pages/NewRecipeForm.jsx'
 import EditRecipeForm from './pages/EditRecipeForm.jsx'
-import RecipeCard from './pages/RecipeCard.jsx'
 import NewCategoryForm from './pages/NewCategoryForm.jsx'
+import EditCategoryForm from './pages/EditCategoryForm.jsx'
+import NewUserForm from './pages/NewUserForm.jsx'
+import EditUserForm from './pages/EditUserForm.jsx'
+import FullSchemaGenerator from './components/RelationshipGenerator.jsx'
 
 const routes = [
   { path: '/', element: <App />, 
@@ -20,9 +24,13 @@ const routes = [
             { path: 'recipes', element: <RecipeList /> },
             { path: 'recipe/new', element: <NewRecipeForm /> },
             { path: 'category/new', element: <NewCategoryForm /> },
+            { path: 'user/new', element: <NewUserForm /> },
             { path: 'recipe/:id/edit', element: <EditRecipeForm /> },
+            { path: 'category/:id/edit', element: <EditCategoryForm /> },
+            { path: 'user/:id/edit', element: <EditUserForm /> },
             { path: 'recipe/:id', element: <RecipeCard /> },
-             { path: '*', element: <Error /> } 
+            { path: 'generator', element: <FullSchemaGenerator /> },
+            { path: '*', element: <Error /> } 
 
   ] },
 ]

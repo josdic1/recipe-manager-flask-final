@@ -5,7 +5,7 @@ import RecipeContext from "../contexts/RecipeContext"
 function RecipeCard() {
     const { id } = useParams()
     const { recipes, handleDelete } = useContext(RecipeContext)
-    const [thisRecipe, setThisRecipe] = useState(null)  // 👈 Start with null
+    const [thisRecipe, setThisRecipe] = useState(null)
     const navigate = useNavigate()
 
     useEffect(() => {
@@ -31,7 +31,6 @@ function RecipeCard() {
         }
     }
 
-    // 👇 Add loading check
     if (!thisRecipe) {
         return <p>Loading recipe...</p>
     }
@@ -42,7 +41,7 @@ function RecipeCard() {
             <p>ID: {thisRecipe.id}</p>
             <p>Name: {thisRecipe.name}</p>
             <p>User ID: {thisRecipe.user_id}</p>
-            <p>Categories: {thisRecipe.categories.map(c => c.name).join(', ')}</p>
+            <p>Categories: {thisRecipe.recipe_categories?.map(rc => `${rc.category.name} (${rc.rating}⭐)`).join(', ') || 'No categories'}</p>
             <button type="button" onClick={() => onClick(thisRecipe.id, 'edit')}>Edit</button>
             <button type="button" onClick={() => onClick(thisRecipe.id, 'delete')}>Delete</button>
         </>

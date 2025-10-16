@@ -43,7 +43,8 @@ return (
             onChange={handleChange} 
         />
     </label>
-    <button type="submit">Create Category</button>  
+             <button type="submit">Create Category</button>
+            <button type="button" onClick={() => navigate('/categories')}>Cancel</button>
 </form>
 </>
 )}

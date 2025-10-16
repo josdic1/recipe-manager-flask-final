@@ -4,6 +4,7 @@ import RecipeProvider from "./providers/RecipeProvider"
 import CategoryProvider from "./providers/CategoryProvider"
 import UserProvider from "./providers/UserProvider"
 import ErrorBoundary from './components/ErrorBoundary'
+import './App.css'
 
 function App() {
 

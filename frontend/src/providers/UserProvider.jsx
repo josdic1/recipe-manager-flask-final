@@ -7,27 +7,24 @@ function UserProvider({children}) {
   const [users, setUsers] = useState([]);
   const [loggedInUser, setLoggedInUser] = useState(() => {
     const saved = localStorage.getItem('loggedInUser')
-    // Check for both null and the string "undefined"
     if (!saved || saved === 'undefined') return {}
     
     try {
-        return JSON.parse(saved)
+      return JSON.parse(saved)
     } catch (error) {
-        console.error('Failed to parse loggedInUser:', error)
-        return {}
+      console.error('Failed to parse loggedInUser:', error)
+      return {}
     }
-})
+  })
 
-  // Function to login user AND save to localStorage
   const loginUser = (user) => {
-      setLoggedInUser(user)
-      localStorage.setItem('loggedInUser', JSON.stringify(user))
+    setLoggedInUser(user)
+    localStorage.setItem('loggedInUser', JSON.stringify(user))
   }
 
-  // Function to logout user
   const logoutUser = () => {
-      setLoggedInUser({})
-      localStorage.removeItem('loggedInUser')
+    setLoggedInUser({})
+    localStorage.removeItem('loggedInUser')
   }
 
   useEffect(() => {
@@ -43,6 +40,26 @@ function UserProvider({children}) {
     }
   } 
 
+  async function handleNew(newUser) {
+    try {
+      const response = await axios.post(`${API_URL}/users`, newUser);
+      setUsers(prevUsers => [...prevUsers, response.data]);
+    } catch (error) {
+      console.error("Error creating user:", error);
+    }
+  }
+
+  async function handleEdit(editedUser) {
+    try {
+      const response = await axios.put(`${API_URL}/users/${editedUser.id}`, editedUser);
+      setUsers(prevUsers => 
+        prevUsers.map(user => user.id === editedUser.id ? response.data : user)
+      );
+    } catch (error) {
+      console.error("Error editing user:", error);
+    }
+  }
+
   async function handleDelete(userId) {
     try {
       await axios.delete(`${API_URL}/users/${userId}`);
@@ -54,12 +71,15 @@ function UserProvider({children}) {
 
   return (
     <UserContext.Provider 
-        value={{ 
-          users, 
-          loggedInUser, 
-          loginUser,
-          logoutUser,     
-        }}>
+      value={{ 
+        users, 
+        loggedInUser, 
+        loginUser,
+        logoutUser,
+        handleNew,
+        handleEdit,
+        handleDelete
+      }}>
       {children}
     </UserContext.Provider>
   )
