@@ -96,7 +96,7 @@ def delete_recipe(recipe_id):
 # --- Category Endpoints ---
 @api.route('/categories', methods=['GET'])
 def get_categories():
-    categories = Category.query.all()
+    categories = Category.query.order_by(Category.name).all() 
     return jsonify(categories_schema.dump(categories))
 
 # --- User Endpoints ---

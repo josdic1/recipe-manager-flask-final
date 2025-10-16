@@ -1,250 +1,96 @@
-import React, { useState } from 'react';
+import React, { useReducer } from 'react';
 import { Plus, Trash2, ArrowRight, Code, Database } from 'lucide-react';
+import { generateFullSchema } from '../utils/schemaGenerator'; // Import the corrected logic
+
+const initialState = {
+  step: 1,
+  projectName: '',
+  entities: [{ name: '', fields: [] }],
+  currentEntityIndex: 0,
+  relationships: [],
+  generatedCode: { models: '', schemas: '' },
+};
+
+function reducer(state, action) {
+  // This reducer logic remains the same
+  switch (action.type) {
+    case 'SET_STEP':
+      return { ...state, step: action.payload };
+    case 'SET_PROJECT_NAME':
+      return { ...state, projectName: action.payload };
+    case 'ADD_ENTITY':
+      return { ...state, entities: [...state.entities, { name: '', fields: [] }] };
+    case 'REMOVE_ENTITY':
+      if (state.entities.length <= 1) return state;
+      return { ...state, entities: state.entities.filter((_, i) => i !== action.payload) };
+    case 'UPDATE_ENTITY_NAME':
+      return { ...state, entities: state.entities.map((e, i) => i === action.payload.index ? { ...e, name: action.payload.name } : e) };
+    case 'SET_CURRENT_ENTITY_INDEX':
+        return { ...state, currentEntityIndex: action.payload };
+    case 'ADD_FIELD': {
+        const newEntities = [...state.entities];
+        newEntities[action.payload].fields.push({ name: '', type: 'String' });
+        return { ...state, entities: newEntities };
+    }
+    case 'REMOVE_FIELD': {
+        const newEntities = [...state.entities];
+        newEntities[action.payload.entityIndex].fields = newEntities[action.payload.entityIndex].fields.filter((_, i) => i !== action.payload.fieldIndex);
+        return { ...state, entities: newEntities };
+    }
+    case 'UPDATE_FIELD': {
+        const newEntities = [...state.entities];
+        newEntities[action.payload.entityIndex].fields[action.payload.fieldIndex][action.payload.key] = action.payload.value;
+        return { ...state, entities: newEntities };
+    }
+    case 'SET_RELATIONSHIPS':
+        return { ...state, relationships: action.payload };
+    case 'UPDATE_RELATIONSHIP':
+      return { ...state, relationships: state.relationships.map((r, i) => i === action.payload.index ? { ...r, [action.payload.key]: action.payload.value } : r) };
+    case 'SET_GENERATED_CODE':
+      return { ...state, generatedCode: action.payload };
+    case 'RESET':
+      return initialState;
+    default:
+      throw new Error();
+  }
+}
 
 function FullSchemaGenerator() {
-  const [step, setStep] = useState(1);
-  const [projectName, setProjectName] = useState('');
-  const [entities, setEntities] = useState([{ name: '', fields: [] }]);
-  const [currentEntityIndex, setCurrentEntityIndex] = useState(0);
-  const [relationships, setRelationships] = useState([]);
-  const [generatedCode, setGeneratedCode] = useState({ models: '', schemas: '' });
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const { step, projectName, entities, currentEntityIndex, relationships, generatedCode } = state;
 
-  // Helper functions
-  const toSnakeCase = (str) => {
-    if (!str) return '';
-    return str.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '');
-  };
-
-  const pluralize = (word) => {
-    if (!word) return '';
-    const lower = word.toLowerCase();
-    if (lower.endsWith('y') && !['ay', 'ey', 'iy', 'oy', 'uy'].some(end => lower.endsWith(end))) {
-      return word.slice(0, -1) + 'ies';
-    }
-    if (lower.endsWith('s') || lower.endsWith('x') || lower.endsWith('z') || 
-        lower.endsWith('ch') || lower.endsWith('sh')) {
-      return word + 'es';
-    }
-    return word + 's';
-  };
-
-  // Entity management
-  const addEntity = () => setEntities([...entities, { name: '', fields: [] }]);
-  const removeEntity = (index) => {
-    if (entities.length > 1) setEntities(entities.filter((_, i) => i !== index));
-  };
-  const updateEntityName = (index, name) => {
-    const updated = [...entities];
-    updated[index].name = name;
-    setEntities(updated);
-  };
-
-  // Field management
-  const addField = (entityIndex) => {
-    const updated = [...entities];
-    updated[entityIndex].fields.push({ name: '', type: 'String' });
-    setEntities(updated);
-  };
-  const removeField = (entityIndex, fieldIndex) => {
-    const updated = [...entities];
-    updated[entityIndex].fields = updated[entityIndex].fields.filter((_, i) => i !== fieldIndex);
-    setEntities(updated);
-  };
-  const updateField = (entityIndex, fieldIndex, key, value) => {
-    const updated = [...entities];
-    updated[entityIndex].fields[fieldIndex][key] = value;
-    setEntities(updated);
-  };
-
-  // Relationship detection
   const askRelationships = () => {
     const rels = [];
-    for (let i = 0; i < entities.length; i++) {
-      for (let j = i + 1; j < entities.length; j++) {
-        if (entities[i].name && entities[j].name) {
-          rels.push({
-            entity1: entities[i].name,
-            entity2: entities[j].name,
-            entity1HasMany: null,
-            entity2HasMany: null
-          });
-        }
-      }
-    }
-    setRelationships(rels);
-    setStep(3);
-  };
-
-  const updateRelationship = (index, key, value) => {
-    const updated = [...relationships];
-    updated[index][key] = value;
-    setRelationships(updated);
-  };
-
-  const generateAllCode = () => {
-    let modelsCode = `# Generated Models for ${projectName}\n\n`;
-    modelsCode += `from extensions import db\n`;
-    modelsCode += `from datetime import datetime, timezone\n\n`;
-
-    let schemasCode = `# Generated Schemas for ${projectName}\n\n`;
-    schemasCode += `from extensions import ma\n`;
-    
-    const entityNames = entities.map(e => e.name).filter(Boolean);
-    schemasCode += `from models import ${entityNames.join(', ')}\n\n`;
-    
-    const bridgeTables = [];
-    const entityRelationships = {};
-    entities.forEach(e => { if (e.name) entityRelationships[e.name] = []; });
-
-    relationships.forEach(rel => {
-      const { entity1, entity2, entity1HasMany, entity2HasMany } = rel;
-      if (entity1HasMany && entity2HasMany) {
-        const bridgeName = `${toSnakeCase(entity1)}_${toSnakeCase(pluralize(entity2))}`;
-        bridgeTables.push({ name: bridgeName, entity1, entity2 });
-        entityRelationships[entity1].push({ type: 'many-to-many', target: entity2, bridgeTable: bridgeName });
-        entityRelationships[entity2].push({ type: 'many-to-many', target: entity1, bridgeTable: bridgeName });
-      } else if (entity1HasMany && !entity2HasMany) {
-        entityRelationships[entity1].push({ type: 'one-to-many', target: entity2 });
-        entityRelationships[entity2].push({ type: 'many-to-one', target: entity1 });
-      } else if (!entity1HasMany && entity2HasMany) {
-        entityRelationships[entity2].push({ type: 'one-to-many', target: entity1 });
-        entityRelationships[entity1].push({ type: 'many-to-one', target: entity2 });
-      }
-    });
-
-    if (bridgeTables.length > 0) {
-      modelsCode += `# Bridge Tables (for Many-to-Many relationships)\n\n`;
-      bridgeTables.forEach(bridge => {
-        const table1 = toSnakeCase(pluralize(bridge.entity1));
-        const table2 = toSnakeCase(pluralize(bridge.entity2));
-        modelsCode += `${bridge.name} = db.Table('${bridge.name}',\n`;
-        modelsCode += `    db.Column('${toSnakeCase(bridge.entity1)}_id', db.Integer, db.ForeignKey('${table1}.id'), primary_key=True),\n`;
-        modelsCode += `    db.Column('${toSnakeCase(bridge.entity2)}_id', db.Integer, db.ForeignKey('${table2}.id'), primary_key=True)\n`;
-        modelsCode += `)\n\n`;
-      });
-    }
-
-    entities.forEach(entity => {
-      if (!entity.name) return;
-      const rels = entityRelationships[entity.name] || [];
-      modelsCode += `class ${entity.name}(db.Model):\n`;
-      modelsCode += `    __tablename__ = '${toSnakeCase(pluralize(entity.name))}'\n\n`;
-      modelsCode += `    id = db.Column(db.Integer, primary_key=True)\n`;
-      entity.fields.forEach(field => {
-        if (field.name) {
-          const dbType = field.type === 'String' ? 'db.String(255)' : 'db.Integer';
-          modelsCode += `    ${toSnakeCase(field.name)} = db.Column(${dbType})\n`;
-        }
-      });
-      rels.filter(r => r.type === 'many-to-one').forEach(rel => {
-        modelsCode += `    ${toSnakeCase(rel.target)}_id = db.Column(db.Integer, db.ForeignKey('${toSnakeCase(pluralize(rel.target))}.id'))\n`;
-      });
-      modelsCode += `    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))\n`;
-      modelsCode += `    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))\n\n`;
-      if (rels.length > 0) {
-        modelsCode += `    # Relationships\n`;
-        rels.forEach(rel => {
-          if (rel.type === 'one-to-many') {
-            const relName = toSnakeCase(pluralize(rel.target));
-            const backPop = toSnakeCase(entity.name);
-            modelsCode += `    ${relName} = db.relationship('${rel.target}', back_populates='${backPop}', cascade='all, delete-orphan')\n`;
-          } else if (rel.type === 'many-to-one') {
-            const relName = toSnakeCase(rel.target);
-            const backPop = toSnakeCase(pluralize(entity.name));
-            modelsCode += `    ${relName} = db.relationship('${rel.target}', back_populates='${backPop}')\n`;
-          } else if (rel.type === 'many-to-many') {
-            const relName = toSnakeCase(pluralize(rel.target));
-            const backPop = toSnakeCase(pluralize(entity.name));
-            modelsCode += `    ${relName} = db.relationship('${rel.target}', secondary='${rel.bridgeTable}', back_populates='${backPop}')\n`;
-          }
+    const validEntities = entities.filter(e => e.name);
+    for (let i = 0; i < validEntities.length; i++) {
+      for (let j = i + 1; j < validEntities.length; j++) {
+        rels.push({
+          entity1: validEntities[i].name,
+          entity2: validEntities[j].name,
+          entity1HasMany: null,
+          entity2HasMany: null
         });
       }
-      modelsCode += `\n    def __repr__(self):\n`;
-      modelsCode += `        return f'<${entity.name} {self.id}>'\n\n\n`;
-    });
-// --- ALTERED SECTION START ---
-    // Generate Marshmallow schemas
-    const schemaClasses = [];
-    entities.forEach(entity => {
-      if (!entity.name) return;
-      const rels = entityRelationships[entity.name] || [];
-      let schemaString = '';
+    }
+    dispatch({ type: 'SET_RELATIONSHIPS', payload: rels });
+    dispatch({ type: 'SET_STEP', payload: 3 });
+  };
 
-      schemaString += `class ${entity.name}Schema(ma.SQLAlchemyAutoSchema):\n`;
-      
-      // Add nested relationships
-      const nestedRels = rels.filter(r => r.type === 'one-to-many' || r.type === 'many-to-many');
-      if (nestedRels.length > 0) {
-          schemaString += `    # Nested relationships\n`;
-          nestedRels.forEach(rel => {
-              const relName = toSnakeCase(pluralize(rel.target));
-              // For exclude, use the relationship name from the OTHER side pointing back to THIS entity
-              const excludeName = rel.type === 'many-to-many' 
-                ? toSnakeCase(pluralize(entity.name))  // Many-to-many uses plural
-                : toSnakeCase(entity.name);            // One-to-many uses singular
-              schemaString += `    ${relName} = ma.Nested('${rel.target}Schema', many=True, exclude=('${excludeName}',))\n`;
-          });
-          schemaString += `\n`;
-      }
-
-      schemaString += `    class Meta:\n`;
-      schemaString += `        model = ${entity.name}\n`;
-      schemaString += `        load_instance = True\n`;
-      schemaString += `        include_fk = True\n\n`;
-      
-      schemaClasses.push({ name: entity.name, code: schemaString });
-    });
-
-    // Output all schema classes (define schemas that don't have dependencies first)
-    const outputOrder = [];
-    const processed = new Set();
-    
-    // Simple ordering: entities with no nested relationships first
-    schemaClasses
-      .filter(sc => !sc.code.includes('ma.Nested'))
-      .forEach(sc => {
-        outputOrder.push(sc);
-        processed.add(sc.name);
-      });
-    
-    // Then entities with nested relationships
-    schemaClasses
-      .filter(sc => sc.code.includes('ma.Nested'))
-      .forEach(sc => {
-        if (!processed.has(sc.name)) {
-          outputOrder.push(sc);
-          processed.add(sc.name);
-        }
-      });
-
-    // Build the schemas code
-    outputOrder.forEach((sc, index) => {
-      if (index === 0) {
-        schemasCode += `# Schema definitions\n`;
-      }
-      schemasCode += sc.code;
-    });
-
-    // Add schema instantiations
-    schemasCode += `# Create ready-to-use instances of your schemas\n`;
-    entities.forEach(entity => {
-        if (entity.name) {
-            schemasCode += `${toSnakeCase(entity.name)}_schema = ${entity.name}Schema()\n`;
-            schemasCode += `${toSnakeCase(pluralize(entity.name))}_schema = ${entity.name}Schema(many=True)\n`;
-        }
-    });
-    // --- ALTERED SECTION END ---
-
-    setGeneratedCode({ models: modelsCode, schemas: schemasCode });
-    setStep(4);
+  const handleGenerateCode = () => {
+    const code = generateFullSchema(entities, relationships, projectName);
+    dispatch({ type: 'SET_GENERATED_CODE', payload: code });
+    dispatch({ type: 'SET_STEP', payload: 4 });
   };
   
-  const reset = () => {
-    setStep(1);
-    setProjectName('');
-    setEntities([{ name: '', fields: [] }]);
-    setRelationships([]);
-    setGeneratedCode({ models: '', schemas: '' });
+  const pluralize = (word) => {
+    if (!word) return '';
+    if (word.endsWith('y') && !['a', 'e', 'i', 'o', 'u'].includes(word.slice(-2, -1).toLowerCase())) {
+        return word.slice(0, -1) + 'ies';
+    }
+    if (word.endsWith('s') || word.endsWith('x') || word.endsWith('z') || word.endsWith('ch') || word.endsWith('sh')) {
+        return word + 'es';
+    }
+    return word + 's';
   };
 
   return (
@@ -259,7 +105,7 @@ function FullSchemaGenerator() {
             <p className="text-gray-600">Build your database models and Marshmallow schemas</p>
           </div>
 
-          <div className="flex justify-center mb-8">
+           <div className="flex justify-center mb-8">
              <div className="flex items-center gap-2">
                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${step >= 1 ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-600'}`}>1</div>
                <ArrowRight className="w-5 h-5 text-gray-400" />
@@ -276,7 +122,7 @@ function FullSchemaGenerator() {
               <h2 className="text-2xl font-bold text-gray-800 mb-6">Step 1: Define Your Main Tables</h2>
               <div className="mb-6">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Project Name</label>
-                <input type="text" value={projectName} onChange={(e) => setProjectName(e.target.value)} placeholder="e.g., Music Tracker, Event Manager" className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none" />
+                <input type="text" value={projectName} onChange={(e) => dispatch({ type: 'SET_PROJECT_NAME', payload: e.target.value })} placeholder="e.g., Music Tracker, Event Manager" className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none" />
               </div>
               <div className="mb-6">
                 <label className="block text-sm font-semibold text-gray-700 mb-3">Main Tables (Entities)</label>
@@ -284,11 +130,11 @@ function FullSchemaGenerator() {
                 <p className="text-sm text-indigo-600 font-semibold mb-4">💡 You need at least 2 tables to create relationships</p>
                 {entities.map((entity, index) => (
                   <div key={index} className="flex gap-2 mb-3">
-                    <input type="text" value={entity.name} onChange={(e) => updateEntityName(index, e.target.value)} placeholder="Entity name (e.g., Event, Book)" className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none" />
-                    {entities.length > 1 && (<button onClick={() => removeEntity(index)} className="px-4 text-red-500 hover:text-red-700"><Trash2 className="w-5 h-5" /></button>)}
+                    <input type="text" value={entity.name} onChange={(e) => dispatch({ type: 'UPDATE_ENTITY_NAME', payload: { index, name: e.target.value } })} placeholder="Entity name (e.g., Event, Book)" className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none" />
+                    {entities.length > 1 && (<button onClick={() => dispatch({ type: 'REMOVE_ENTITY', payload: index })} className="px-4 text-red-500 hover:text-red-700"><Trash2 className="w-5 h-5" /></button>)}
                   </div>
                 ))}
-                <button onClick={addEntity} className="flex items-center gap-2 text-indigo-600 hover:text-indigo-800 font-semibold"><Plus className="w-5 h-5" /> Add Another Table</button>
+                <button onClick={() => dispatch({ type: 'ADD_ENTITY' })} className="flex items-center gap-2 text-indigo-600 hover:text-indigo-800 font-semibold"><Plus className="w-5 h-5" /> Add Another Table</button>
               </div>
               {(!projectName || entities.filter(e => e.name).length < 2) && (
                 <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4 mb-4">
@@ -299,7 +145,7 @@ function FullSchemaGenerator() {
                   </ul>
                 </div>
               )}
-              <button onClick={() => setStep(2)} disabled={!projectName || entities.filter(e => e.name).length < 2} className="w-full bg-indigo-600 text-white py-4 rounded-lg font-bold text-lg hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition">Next: Add Fields →</button>
+              <button onClick={() => dispatch({ type: 'SET_STEP', payload: 2 })} disabled={!projectName || entities.filter(e => e.name).length < 2} className="w-full bg-indigo-600 text-white py-4 rounded-lg font-bold text-lg hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition">Next: Add Fields →</button>
             </div>
           )}
 
@@ -307,7 +153,7 @@ function FullSchemaGenerator() {
             <div>
               <h2 className="text-2xl font-bold text-gray-800 mb-6">Step 2: Add Fields to Each Table</h2>
               <div className="flex gap-2 mb-6">
-                {entities.filter(e => e.name).map((entity, index) => (<button key={index} onClick={() => setCurrentEntityIndex(index)} className={`px-4 py-2 rounded-lg font-semibold transition ${currentEntityIndex === index ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}>{entity.name}</button>))}
+                {entities.filter(e => e.name).map((entity, index) => (<button key={index} onClick={() => dispatch({ type: 'SET_CURRENT_ENTITY_INDEX', payload: index })} className={`px-4 py-2 rounded-lg font-semibold transition ${currentEntityIndex === index ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}>{entity.name}</button>))}
               </div>
               {entities[currentEntityIndex] && (
                 <div className="bg-gray-50 p-6 rounded-lg mb-6">
@@ -315,23 +161,23 @@ function FullSchemaGenerator() {
                   <p className="text-sm text-gray-600 mb-4">💡 Don't add id, created_at, or updated_at - those are automatic!</p>
                   {entities[currentEntityIndex].fields.map((field, fieldIndex) => (
                     <div key={fieldIndex} className="flex gap-2 mb-3">
-                      <input type="text" value={field.name} onChange={(e) => updateField(currentEntityIndex, fieldIndex, 'name', e.target.value)} placeholder="Field name (e.g., title, name, bio)" className="flex-1 px-3 py-2 border border-gray-300 rounded" />
-                      <select value={field.type} onChange={(e) => updateField(currentEntityIndex, fieldIndex, 'type', e.target.value)} className="px-3 py-2 border border-gray-300 rounded">
+                      <input type="text" value={field.name} onChange={(e) => dispatch({ type: 'UPDATE_FIELD', payload: { entityIndex: currentEntityIndex, fieldIndex, key: 'name', value: e.target.value } })} placeholder="Field name (e.g., title, name, bio)" className="flex-1 px-3 py-2 border border-gray-300 rounded" />
+                      <select value={field.type} onChange={(e) => dispatch({ type: 'UPDATE_FIELD', payload: { entityIndex: currentEntityIndex, fieldIndex, key: 'type', value: e.target.value } })} className="px-3 py-2 border border-gray-300 rounded">
                         <option value="String">String</option><option value="Integer">Integer</option>
                       </select>
-                      <button onClick={() => removeField(currentEntityIndex, fieldIndex)} className="px-3 text-red-500 hover:text-red-700"><Trash2 className="w-5 h-5" /></button>
+                      <button onClick={() => dispatch({ type: 'REMOVE_FIELD', payload: { entityIndex: currentEntityIndex, fieldIndex } })} className="px-3 text-red-500 hover:text-red-700"><Trash2 className="w-5 h-5" /></button>
                     </div>
                   ))}
-                  <button onClick={() => addField(currentEntityIndex)} className="flex items-center gap-2 text-indigo-600 hover:text-indigo-800 font-semibold"><Plus className="w-5 h-5" /> Add Field</button>
+                  <button onClick={() => dispatch({ type: 'ADD_FIELD', payload: currentEntityIndex })} className="flex items-center gap-2 text-indigo-600 hover:text-indigo-800 font-semibold"><Plus className="w-5 h-5" /> Add Field</button>
                 </div>
               )}
               <div className="flex gap-4">
-                <button onClick={() => setStep(1)} className="px-6 py-3 border-2 border-gray-300 rounded-lg font-semibold hover:bg-gray-100">← Back</button>
+                <button onClick={() => dispatch({ type: 'SET_STEP', payload: 1 })} className="px-6 py-3 border-2 border-gray-300 rounded-lg font-semibold hover:bg-gray-100">← Back</button>
                 <button onClick={askRelationships} className="flex-1 bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700">Next: Define Relationships →</button>
               </div>
             </div>
           )}
-
+          
           {step === 3 && (
             <div>
               <h2 className="text-2xl font-bold text-gray-800 mb-6">Step 3: Define Relationships</h2>
@@ -343,24 +189,24 @@ function FullSchemaGenerator() {
                     <div>
                       <p className="text-gray-700 font-semibold mb-3">Can one {rel.entity1} have multiple {pluralize(rel.entity2)}?</p>
                       <div className="grid grid-cols-2 gap-4">
-                        <button onClick={() => updateRelationship(index, 'entity1HasMany', false)} className={`py-3 px-6 rounded-lg font-bold border-2 transition ${rel.entity1HasMany === false ? 'bg-green-100 border-green-500 text-green-800' : 'bg-white border-gray-300 hover:border-gray-400'}`}>❌ No</button>
-                        <button onClick={() => updateRelationship(index, 'entity1HasMany', true)} className={`py-3 px-6 rounded-lg font-bold border-2 transition ${rel.entity1HasMany === true ? 'bg-green-100 border-green-500 text-green-800' : 'bg-white border-gray-300 hover:border-gray-400'}`}>✅ Yes</button>
+                        <button onClick={() => dispatch({ type: 'UPDATE_RELATIONSHIP', payload: { index, key: 'entity1HasMany', value: false } })} className={`py-3 px-6 rounded-lg font-bold border-2 transition ${rel.entity1HasMany === false ? 'bg-green-100 border-green-500 text-green-800' : 'bg-white border-gray-300 hover:border-gray-400'}`}>❌ No</button>
+                        <button onClick={() => dispatch({ type: 'UPDATE_RELATIONSHIP', payload: { index, key: 'entity1HasMany', value: true } })} className={`py-3 px-6 rounded-lg font-bold border-2 transition ${rel.entity1HasMany === true ? 'bg-green-100 border-green-500 text-green-800' : 'bg-white border-gray-300 hover:border-gray-400'}`}>✅ Yes</button>
                       </div>
                     </div>
                     <div>
                       <p className="text-gray-700 font-semibold mb-3">Can one {rel.entity2} have multiple {pluralize(rel.entity1)}?</p>
                       <div className="grid grid-cols-2 gap-4">
-                        <button onClick={() => updateRelationship(index, 'entity2HasMany', false)} className={`py-3 px-6 rounded-lg font-bold border-2 transition ${rel.entity2HasMany === false ? 'bg-green-100 border-green-500 text-green-800' : 'bg-white border-gray-300 hover:border-gray-400'}`}>❌ No</button>
-                        <button onClick={() => updateRelationship(index, 'entity2HasMany', true)} className={`py-3 px-6 rounded-lg font-bold border-2 transition ${rel.entity2HasMany === true ? 'bg-green-100 border-green-500 text-green-800' : 'bg-white border-gray-300 hover:border-gray-400'}`}>✅ Yes</button>
+                        <button onClick={() => dispatch({ type: 'UPDATE_RELATIONSHIP', payload: { index, key: 'entity2HasMany', value: false } })} className={`py-3 px-6 rounded-lg font-bold border-2 transition ${rel.entity2HasMany === false ? 'bg-green-100 border-green-500 text-green-800' : 'bg-white border-gray-300 hover:border-gray-400'}`}>❌ No</button>
+                        <button onClick={() => dispatch({ type: 'UPDATE_RELATIONSHIP', payload: { index, key: 'entity2HasMany', value: true } })} className={`py-3 px-6 rounded-lg font-bold border-2 transition ${rel.entity2HasMany === true ? 'bg-green-100 border-green-500 text-green-800' : 'bg-white border-gray-300 hover:border-gray-400'}`}>✅ Yes</button>
                       </div>
                     </div>
                     {rel.entity1HasMany !== null && rel.entity2HasMany !== null && (
                       <div className="bg-white p-3 rounded border-2 border-indigo-300">
                         <p className="font-semibold text-indigo-700">
                           {rel.entity1HasMany && rel.entity2HasMany && '🔗 Many-to-Many (will create bridge table)'}
-                          {rel.entity1HasMany && !rel.entity2HasMany && '➡️ One-to-Many (' + rel.entity1 + ' has many ' + pluralize(rel.entity2) + ')'}
-                          {!rel.entity1HasMany && rel.entity2HasMany && '⬅️ One-to-Many (' + rel.entity2 + ' has many ' + pluralize(rel.entity1) + ')'}
-                          {!rel.entity1HasMany && !rel.entity2HasMany && '❌ No relationship'}
+                          {rel.entity1HasMany && !rel.entity2HasMany && `➡️ One-to-Many (${rel.entity1} has many ${pluralize(rel.entity2)})`}
+                          {!rel.entity1HasMany && rel.entity2HasMany && `⬅️ One-to-Many (${rel.entity2} has many ${pluralize(rel.entity1)})`}
+                          {!rel.entity1HasMany && !rel.entity2HasMany && '❌ No direct relationship'}
                         </p>
                       </div>
                     )}
@@ -368,8 +214,8 @@ function FullSchemaGenerator() {
                 </div>
               ))}
               <div className="flex gap-4">
-                <button onClick={() => setStep(2)} className="px-6 py-3 border-2 border-gray-300 rounded-lg font-semibold hover:bg-gray-100">← Back</button>
-                <button onClick={generateAllCode} disabled={relationships.some(r => r.entity1HasMany === null || r.entity2HasMany === null)} className="flex-1 bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed">Generate Complete Schema →</button>
+                <button onClick={() => dispatch({ type: 'SET_STEP', payload: 2 })} className="px-6 py-3 border-2 border-gray-300 rounded-lg font-semibold hover:bg-gray-100">← Back</button>
+                <button onClick={handleGenerateCode} disabled={relationships.some(r => r.entity1HasMany === null || r.entity2HasMany === null)} className="flex-1 bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed">Generate Complete Schema →</button>
               </div>
             </div>
           )}
@@ -401,7 +247,7 @@ function FullSchemaGenerator() {
                    <li>Apply migrations: <code className="bg-blue-200 px-2 py-1 rounded">flask db upgrade</code></li>
                  </ol>
                </div>
-               <button onClick={reset} className="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700">Create Another Schema</button>
+               <button onClick={() => dispatch({ type: 'RESET' })} className="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700">Create Another Schema</button>
              </div>
            )}
         </div>
